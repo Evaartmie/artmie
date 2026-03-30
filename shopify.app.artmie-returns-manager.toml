@@ -1,0 +1,20 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "a5f565f0a494f27020ca01cedb7909d2"
+name = "Artmie Returns  Manager "
+application_url = "https://camps-telephone-evaluate-dayton.trycloudflare.com"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "address-validator-test-2.myshopify.com"
+
+[webhooks]
+api_version = "2026-04"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_customers,read_orders,read_products,read_returns,write_orders,write_returns"
+
+[auth]
+redirect_urls = [ "https://camps-telephone-evaluate-dayton.trycloudflare.com/api/auth" ]

@@ -1,0 +1,38 @@
+import { vitePlugin as remix } from "@remix-run/dev";
+import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+
+if (
+  process.env.HOST &&
+  (!process.env.SHOPIFY_APP_URL ||
+    process.env.SHOPIFY_APP_URL === process.env.HOST)
+) {
+  process.env.SHOPIFY_APP_URL = process.env.HOST;
+}
+
+let hmrConfig;
+if (process.env.SHOPIFY_APP_URL) {
+  const { hostname } = new URL(process.env.SHOPIFY_APP_URL);
+  hmrConfig = {
+    protocol: "ws",
+    host: hostname,
+    port: 64999,
+    clientPort: 64999,
+  };
+}
+
+export default defineConfig({
+  server: {
+    port: Number(process.env.PORT || 3000),
+    hmr: hmrConfig,
+    fs: {
+      allow: ["app", "node_modules"],
+    },
+  },
+  plugins: [
+    remix({
+      ignoredRouteFiles: ["**/.*"],
+    }),
+    tsconfigPaths(),
+  ],
+});

@@ -1,0 +1,197 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Shopify Session (required by @shopify/shopify-app-remix) ───────────
+
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// ─── Store Settings (per-store configuration) ───────────────────────────
+
+model StoreSettings {
+  id                  String   @id @default(cuid())
+  shop                String   @unique
+  returnWindowDays    Int      @default(30)
+  autoApproveEnabled  Boolean  @default(false)
+  autoApproveMaxValue Float?
+  autoApproveReasons  String?   // JSON array of reason IDs
+  eligibleProductTags String?   // JSON array - empty means all eligible
+  excludedProductTags String?   // JSON array - tags that cannot be returned
+  notifyCustomerEmail Boolean  @default(true)
+  notifyAdminEmail    Boolean  @default(true)
+  adminEmailAddress   String?
+  emailFromName       String?
+  returnInstructions  String?
+  requirePhotos       Boolean  @default(false)
+  maxPhotosPerItem    Int      @default(3)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// ─── Return Reasons (customizable per store) ────────────────────────────
+
+model ReturnReason {
+  id           String   @id @default(cuid())
+  shop         String
+  label        String
+  shopifyReason String  @default("OTHER") // Maps to Shopify enum: DEFECTIVE, WRONG_ITEM, STYLE, SIZE_TOO_SMALL, SIZE_TOO_LARGE, UNWANTED, OTHER, COLOR, UNKNOWN
+  sortOrder    Int      @default(0)
+  isActive     Boolean  @default(true)
+  requireNote  Boolean  @default(false)
+  requirePhoto Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  returnLineItems ReturnLineItem[]
+
+  @@index([shop])
+}
+
+// ─── Return Requests ────────────────────────────────────────────────────
+
+model ReturnRequest {
+  id                String    @id @default(cuid())
+  shop              String
+  shopifyOrderId    String    // gid://shopify/Order/123
+  shopifyOrderName  String    // #1001
+  shopifyReturnId   String?   // gid://shopify/Return/456 (after synced to Shopify)
+  customerId        String    // gid://shopify/Customer/789
+  customerEmail     String
+  customerName      String
+  status            String    @default("pending")
+  // Statuses: pending, approved, rejected, in_transit, received, refunded, closed, cancelled
+  totalRefundAmount Float?
+  currency          String    @default("EUR")
+  adminNotes        String?
+  customerNotes     String?
+  trackingNumber    String?
+  trackingUrl       String?
+  shippingCarrier   String?
+  approvedAt        DateTime?
+  rejectedAt        DateTime?
+  receivedAt        DateTime?
+  refundedAt        DateTime?
+  closedAt          DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  lineItems      ReturnLineItem[]
+  statusHistory  ReturnStatusHistory[]
+  notifications  Notification[]
+  photos         ReturnPhoto[]
+
+  @@index([shop])
+  @@index([shopifyOrderId])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ─── Return Line Items ──────────────────────────────────────────────────
+
+model ReturnLineItem {
+  id                  String  @id @default(cuid())
+  returnRequestId     String
+  shopifyLineItemId   String  // gid://shopify/FulfillmentLineItem/123
+  shopifyVariantId    String?
+  productTitle        String
+  variantTitle        String?
+  sku                 String?
+  quantity            Int
+  pricePerItem        Float
+  reasonId            String?
+  customerNote        String?
+
+  returnRequest ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+  reason        ReturnReason? @relation(fields: [reasonId], references: [id])
+
+  @@index([returnRequestId])
+}
+
+// ─── Return Photos ──────────────────────────────────────────────────────
+
+model ReturnPhoto {
+  id              String   @id @default(cuid())
+  returnRequestId String
+  fileName        String
+  fileUrl         String
+  fileSize        Int?
+  mimeType        String?
+  createdAt       DateTime @default(now())
+
+  returnRequest ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+
+  @@index([returnRequestId])
+}
+
+// ─── Status History (audit trail) ───────────────────────────────────────
+
+model ReturnStatusHistory {
+  id              String   @id @default(cuid())
+  returnRequestId String
+  fromStatus      String?
+  toStatus        String
+  changedBy       String?  // "system", "admin:email@...", "customer"
+  note            String?
+  createdAt       DateTime @default(now())
+
+  returnRequest ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+
+  @@index([returnRequestId])
+  @@index([createdAt])
+}
+
+// ─── Notifications Log ──────────────────────────────────────────────────
+
+model Notification {
+  id              String    @id @default(cuid())
+  returnRequestId String
+  type            String    // "return_confirmed", "return_approved", "return_rejected", "return_refunded"
+  channel         String    @default("email")
+  recipient       String
+  subject         String
+  body            String?
+  sentAt          DateTime?
+  failedAt        DateTime?
+  errorMessage    String?
+  createdAt       DateTime  @default(now())
+
+  returnRequest ReturnRequest @relation(fields: [returnRequestId], references: [id], onDelete: Cascade)
+
+  @@index([returnRequestId])
+}
+
+// ─── Email Templates (per store) ────────────────────────────────────────
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  shop      String
+  type      String   // "return_confirmed", "return_approved", "return_rejected", "return_refunded"
+  subject   String
+  bodyHtml  String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([shop, type])
+}

@@ -1,0 +1,27 @@
+# Learn more about configuring your app: https://shopify.dev/docs/apps/tools/cli/configuration
+client_id = ""
+name = "Returns Manager"
+application_url = "https://shopify.dev/apps/default-app-home"
+embedded = true
+
+[build]
+automatically_update_urls_on_dev = true
+include_config_on_deploy = true
+dev_store_url = ""
+
+[webhooks]
+api_version = "2025-04"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["orders/fulfilled"]
+  uri = "/webhooks"
+
+[access_scopes]
+scopes = "read_orders,write_orders,read_returns,write_returns,read_customers,read_products"
+
+[auth]
+redirect_urls = ["https://shopify.dev/apps/default-app-home/api/auth"]
