@@ -9,8 +9,7 @@
     "start": "remix-serve ./build/server/index.js",
     "docker-start": "remix-serve ./build/server/index.js",
     "setup": "prisma generate && prisma migrate deploy",
-    "postinstall": "prisma generate",
-    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
+        "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "shopify": "shopify",
     "prisma": "prisma",
     "generate": "shopify app generate"
