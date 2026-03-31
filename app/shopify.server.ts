@@ -11,7 +11,7 @@ const storage = new PrismaSessionStorage(prisma);
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
   apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
-  apiVersion: "2025-04",
+  apiVersion: "2026-04",
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL || "",
   authPathPrefix: "/auth",
@@ -26,7 +26,7 @@ const shopify = shopifyApp({
 });
 
 export default shopify;
-export const apiVersion = "2025-04";
+export const apiVersion = "2026-04";
 export const addDocumentResponseHeaders = shopify.addDocumentResponseHeaders;
 export const authenticate = shopify.authenticate;
 export const unauthenticated = shopify.unauthenticated;
