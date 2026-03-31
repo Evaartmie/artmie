@@ -6,7 +6,7 @@
   "scripts": {
     "build": "prisma generate && remix vite:build",
     "dev": "shopify app dev",
-    "start": "remix-serve ./build/server/index.js",
+    "start": "node server.mjs",
     "docker-start": "remix-serve ./build/server/index.js",
     "setup": "prisma generate && prisma migrate deploy",
         "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
