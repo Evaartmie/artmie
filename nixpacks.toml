@@ -1,2 +1,5 @@
 [phases.setup]
 aptPkgs = ["openssl", "libssl-dev", "ca-certificates"]
+
+[start]
+cmd = "node server.mjs"
