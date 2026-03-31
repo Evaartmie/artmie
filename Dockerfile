@@ -1,8 +1,10 @@
-FROM node:18-alpine
+﻿FROM node:18-slim
+
+RUN apt-get update -y && apt-get install -y openssl libssl-dev ca-certificates && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
+COPY package*.json ./
 RUN npm install --production=false
 
 COPY . .
@@ -12,4 +14,4 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["npm", "run", "docker-start"]
+CMD ["sh", "-c", "npx prisma db push --accept-data-loss && npm run start"]
