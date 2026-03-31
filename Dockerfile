@@ -14,4 +14,4 @@ RUN npm run build
 
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma db push --accept-data-loss && npm run start"]
+CMD ["sh", "-c", "echo '=== Starting ===' && echo 'PORT='$PORT && echo 'NODE_ENV='$NODE_ENV && echo 'SHOPIFY_APP_URL='$SHOPIFY_APP_URL && npx prisma db push --accept-data-loss && echo '=== Prisma done, starting remix-serve ===' && ls -la ./build/server/ && npx remix-serve ./build/server/index.js"]
