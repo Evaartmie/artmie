@@ -4,6 +4,7 @@ import { RemixServer } from "@remix-run/react";
 import { createReadableStreamFromReadable } from "@remix-run/node";
 import { isbot } from "isbot";
 import type { EntryContext } from "@remix-run/node";
+import { addDocumentResponseHeaders } from "./shopify.server";
 
 const ABORT_DELAY = 5000;
 
@@ -13,6 +14,8 @@ export default function handleRequest(
   responseHeaders: Headers,
   remixContext: EntryContext
 ) {
+  addDocumentResponseHeaders(request, responseHeaders);
+
   const prohibitOutOfOrderStreaming =
     isbot(request.headers.get("user-agent")) || false;
 
