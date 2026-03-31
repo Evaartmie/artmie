@@ -8,8 +8,7 @@
     "dev": "shopify app dev",
     "start": "node server.mjs",
     "docker-start": "remix-serve ./build/server/index.js",
-    "setup": "prisma generate && prisma migrate deploy",
-        "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
+    "lint": "eslint --cache --cache-location ./node_modules/.cache/eslint .",
     "shopify": "shopify",
     "prisma": "prisma",
     "generate": "shopify app generate"
