@@ -1,11 +1,11 @@
 -- CreateTable
 CREATE TABLE "Session" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "shop" TEXT NOT NULL,
     "state" TEXT NOT NULL,
     "isOnline" BOOLEAN NOT NULL DEFAULT false,
     "scope" TEXT,
-    "expires" DATETIME,
+    "expires" TIMESTAMP(3),
     "accessToken" TEXT NOT NULL,
     "userId" BIGINT,
     "firstName" TEXT,
@@ -14,16 +14,18 @@ CREATE TABLE "Session" (
     "accountOwner" BOOLEAN NOT NULL DEFAULT false,
     "locale" TEXT,
     "collaborator" BOOLEAN DEFAULT false,
-    "emailVerified" BOOLEAN DEFAULT false
+    "emailVerified" BOOLEAN DEFAULT false,
+
+    CONSTRAINT "Session_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "StoreSettings" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "shop" TEXT NOT NULL,
     "returnWindowDays" INTEGER NOT NULL DEFAULT 30,
     "autoApproveEnabled" BOOLEAN NOT NULL DEFAULT false,
-    "autoApproveMaxValue" REAL,
+    "autoApproveMaxValue" DOUBLE PRECISION,
     "autoApproveReasons" TEXT,
     "eligibleProductTags" TEXT,
     "excludedProductTags" TEXT,
@@ -34,13 +36,15 @@ CREATE TABLE "StoreSettings" (
     "returnInstructions" TEXT,
     "requirePhotos" BOOLEAN NOT NULL DEFAULT false,
     "maxPhotosPerItem" INTEGER NOT NULL DEFAULT 3,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "StoreSettings_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "ReturnReason" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "shop" TEXT NOT NULL,
     "label" TEXT NOT NULL,
     "shopifyReason" TEXT NOT NULL DEFAULT 'OTHER',
@@ -48,12 +52,14 @@ CREATE TABLE "ReturnReason" (
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "requireNote" BOOLEAN NOT NULL DEFAULT false,
     "requirePhoto" BOOLEAN NOT NULL DEFAULT false,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ReturnReason_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "ReturnRequest" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "shop" TEXT NOT NULL,
     "shopifyOrderId" TEXT NOT NULL,
     "shopifyOrderName" TEXT NOT NULL,
@@ -62,25 +68,27 @@ CREATE TABLE "ReturnRequest" (
     "customerEmail" TEXT NOT NULL,
     "customerName" TEXT NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'pending',
-    "totalRefundAmount" REAL,
+    "totalRefundAmount" DOUBLE PRECISION,
     "currency" TEXT NOT NULL DEFAULT 'EUR',
     "adminNotes" TEXT,
     "customerNotes" TEXT,
     "trackingNumber" TEXT,
     "trackingUrl" TEXT,
     "shippingCarrier" TEXT,
-    "approvedAt" DATETIME,
-    "rejectedAt" DATETIME,
-    "receivedAt" DATETIME,
-    "refundedAt" DATETIME,
-    "closedAt" DATETIME,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "approvedAt" TIMESTAMP(3),
+    "rejectedAt" TIMESTAMP(3),
+    "receivedAt" TIMESTAMP(3),
+    "refundedAt" TIMESTAMP(3),
+    "closedAt" TIMESTAMP(3),
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ReturnRequest_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "ReturnLineItem" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "returnRequestId" TEXT NOT NULL,
     "shopifyLineItemId" TEXT NOT NULL,
     "shopifyVariantId" TEXT,
@@ -88,63 +96,68 @@ CREATE TABLE "ReturnLineItem" (
     "variantTitle" TEXT,
     "sku" TEXT,
     "quantity" INTEGER NOT NULL,
-    "pricePerItem" REAL NOT NULL,
+    "pricePerItem" DOUBLE PRECISION NOT NULL,
     "reasonId" TEXT,
     "customerNote" TEXT,
-    CONSTRAINT "ReturnLineItem_returnRequestId_fkey" FOREIGN KEY ("returnRequestId") REFERENCES "ReturnRequest" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "ReturnLineItem_reasonId_fkey" FOREIGN KEY ("reasonId") REFERENCES "ReturnReason" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+
+    CONSTRAINT "ReturnLineItem_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "ReturnPhoto" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "returnRequestId" TEXT NOT NULL,
     "fileName" TEXT NOT NULL,
     "fileUrl" TEXT NOT NULL,
     "fileSize" INTEGER,
     "mimeType" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "ReturnPhoto_returnRequestId_fkey" FOREIGN KEY ("returnRequestId") REFERENCES "ReturnRequest" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ReturnPhoto_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "ReturnStatusHistory" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "returnRequestId" TEXT NOT NULL,
     "fromStatus" TEXT,
     "toStatus" TEXT NOT NULL,
     "changedBy" TEXT,
     "note" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "ReturnStatusHistory_returnRequestId_fkey" FOREIGN KEY ("returnRequestId") REFERENCES "ReturnRequest" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "ReturnStatusHistory_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "Notification" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "returnRequestId" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "channel" TEXT NOT NULL DEFAULT 'email',
     "recipient" TEXT NOT NULL,
     "subject" TEXT NOT NULL,
     "body" TEXT,
-    "sentAt" DATETIME,
-    "failedAt" DATETIME,
+    "sentAt" TIMESTAMP(3),
+    "failedAt" TIMESTAMP(3),
     "errorMessage" TEXT,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Notification_returnRequestId_fkey" FOREIGN KEY ("returnRequestId") REFERENCES "ReturnRequest" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
 CREATE TABLE "EmailTemplate" (
-    "id" TEXT NOT NULL PRIMARY KEY,
+    "id" TEXT NOT NULL,
     "shop" TEXT NOT NULL,
     "type" TEXT NOT NULL,
     "subject" TEXT NOT NULL,
     "bodyHtml" TEXT NOT NULL,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
-    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updatedAt" DATETIME NOT NULL
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "EmailTemplate_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
@@ -185,3 +198,19 @@ CREATE INDEX "Notification_returnRequestId_idx" ON "Notification"("returnRequest
 
 -- CreateIndex
 CREATE UNIQUE INDEX "EmailTemplate_shop_type_key" ON "EmailTemplate"("shop", "type");
+
+-- AddForeignKey
+ALTER TABLE "ReturnLineItem" ADD CONSTRAINT "ReturnLineItem_returnRequestId_fkey" FOREIGN KEY ("returnRequestId") REFERENCES "ReturnRequest"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ReturnLineItem" ADD CONSTRAINT "ReturnLineItem_reasonId_fkey" FOREIGN KEY ("reasonId") REFERENCES "ReturnReason"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ReturnPhoto" ADD CONSTRAINT "ReturnPhoto_returnRequestId_fkey" FOREIGN KEY ("returnRequestId") REFERENCES "ReturnRequest"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ReturnStatusHistory" ADD CONSTRAINT "ReturnStatusHistory_returnRequestId_fkey" FOREIGN KEY ("returnRequestId") REFERENCES "ReturnRequest"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Notification" ADD CONSTRAINT "Notification_returnRequestId_fkey" FOREIGN KEY ("returnRequestId") REFERENCES "ReturnRequest"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
