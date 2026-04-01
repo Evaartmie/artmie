@@ -5,6 +5,9 @@ import express from "express";
 console.log("=== Server starting ===");
 console.log("PORT:", process.env.PORT);
 console.log("NODE_ENV:", process.env.NODE_ENV);
+console.log("ADMIN_PASSWORD exists:", !!process.env.ADMIN_PASSWORD);
+console.log("ADMIN_PASSWORD value:", process.env.ADMIN_PASSWORD);
+console.log("SHOPIFY_API_KEY exists:", !!process.env.SHOPIFY_API_KEY);
 
 installGlobals();
 
