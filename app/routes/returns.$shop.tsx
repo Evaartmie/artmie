@@ -2,7 +2,6 @@ import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, useActionData, Form, useNavigation } from "@remix-run/react";
 import { prisma } from "../db.server";
-import { unauthenticated } from "../shopify.server";
 import { useState } from "react";
 
 // Map of URL slugs to myshopify domains
@@ -85,12 +84,32 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       return json({ error: "Zadajte číslo objednávky aj email.", step: "lookup" });
     }
 
-    // Get Shopify admin API access via SDK
+    // Get Shopify admin API access
     try {
-      const { admin } = await unauthenticated.admin(shopDomain);
+      // Try to find any valid session for this shop
+      const sessions = await prisma.session.findMany({
+        where: { shop: shopDomain },
+        orderBy: { expires: "desc" },
+      });
 
-      const result = await admin.graphql(
-        `query OrderLookup($query: String!) {
+      // Find offline session (id contains "offline") or any session with token
+      const offlineSession = sessions.find(s => s.id.includes("offline"));
+      const session = offlineSession || sessions.find(s => s.accessToken);
+
+      if (!session?.accessToken) {
+        return json({ error: `Store nie je pripojený. Nájdené sessions: ${sessions.length}, IDs: ${sessions.map(s => s.id).join(", ")}`, step: "lookup" });
+      }
+
+      const response = await fetch(
+        `https://${shopDomain}/admin/api/2025-04/graphql.json`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Shopify-Access-Token": session.accessToken,
+          },
+          body: JSON.stringify({
+            query: `query OrderLookup($query: String!) {
           orders(first: 1, query: $query) {
             edges {
               node {
@@ -129,10 +148,13 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
             }
           }
         }`,
-        { variables: { query: `name:${orderNumber.replace(/^#/, '')}` } }
+            variables: { query: `name:${orderNumber.replace(/^#/, '')}` },
+          }),
+        }
       );
 
-      const data = await result.json();
+      const data = await response.json();
+      console.log("Order lookup:", JSON.stringify(data?.errors || "ok"));
       const order = data?.data?.orders?.edges?.[0]?.node;
 
       if (!order) {
