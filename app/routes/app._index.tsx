@@ -28,6 +28,36 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
+  // === CRITICAL: Sync the valid token to offline session for portal use ===
+  // The embedded app gets a fresh token via token exchange, but the portal
+  // needs a valid offline token stored in the database for unauthenticated access.
+  if (session.accessToken) {
+    const offlineSessionId = `offline_${shop}`;
+    try {
+      await prisma.session.upsert({
+        where: { id: offlineSessionId },
+        update: {
+          accessToken: session.accessToken,
+          scope: session.scope || "",
+          isOnline: false,
+          expires: null, // offline tokens don't expire
+        },
+        create: {
+          id: offlineSessionId,
+          shop: shop,
+          state: "active",
+          accessToken: session.accessToken,
+          scope: session.scope || "",
+          isOnline: false,
+          expires: null,
+        },
+      });
+      console.log(`[Returns] Synced valid token to offline session for ${shop}. Scope: ${session.scope}`);
+    } catch (err) {
+      console.error(`[Returns] Failed to sync token for ${shop}:`, err);
+    }
+  }
+
   // Ensure store settings exist (seed on first load)
   const existingSettings = await prisma.storeSettings.findUnique({
     where: { shop },
