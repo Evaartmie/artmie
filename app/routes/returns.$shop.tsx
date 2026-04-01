@@ -14,6 +14,9 @@ const SHOP_SLUGS: Record<string, string> = {
   "papilora-bg": "papilora-bg.myshopify.com",
   "papilora-hr": "papilora-hr.myshopify.com",
   "papilora-ba": "papilora-ba.myshopify.com",
+  "papilora-si": "papilora-si.myshopify.com",
+  "papilora-gr": "papilora-gr.myshopify.com",
+  "papilora-it": "papilora-it.myshopify.com",
   "artmie-sk": "artmie.myshopify.com",
   "artmie-cz": "artmie-cz.myshopify.com",
   "artmie-hu": "artmie-hu.myshopify.com",
@@ -23,6 +26,9 @@ const SHOP_SLUGS: Record<string, string> = {
   "artmie-de": "artmie-de.myshopify.com",
   "artmie-ba": "artmie-ba.myshopify.com",
   "artmie-rs": "artmie-rs.myshopify.com",
+  "artmie-si": "artmie-si.myshopify.com",
+  "artmie-gr": "artmie-gr.myshopify.com",
+  "artmie-it": "artmie-it.myshopify.com",
 };
 
 const SHOP_NAMES: Record<string, string> = {
@@ -34,6 +40,9 @@ const SHOP_NAMES: Record<string, string> = {
   "papilora-bg": "Papilora BG",
   "papilora-hr": "Papilora HR",
   "papilora-ba": "Papilora BA",
+  "papilora-si": "Papilora SI",
+  "papilora-gr": "Papilora GR",
+  "papilora-it": "Papilora IT",
   "artmie-sk": "Artmie SK",
   "artmie-cz": "Artmie CZ",
   "artmie-hu": "Artmie HU",
@@ -43,15 +52,644 @@ const SHOP_NAMES: Record<string, string> = {
   "artmie-de": "Artmie DE",
   "artmie-ba": "Artmie BA",
   "artmie-rs": "Artmie RS",
+  "artmie-si": "Artmie SI",
+  "artmie-gr": "Artmie GR",
+  "artmie-it": "Artmie IT",
 };
+
+// Language mapping per shop slug suffix
+const SHOP_LANG: Record<string, string> = {
+  "sk": "sk", "cz": "cs", "hu": "hu", "pl": "pl", "ro": "ro",
+  "bg": "bg", "hr": "hr", "ba": "bs", "de": "de", "rs": "sr",
+  "si": "sl", "gr": "el", "it": "it",
+};
+
+function getLang(slug: string): string {
+  const suffix = slug.split("-").pop() || "";
+  return SHOP_LANG[suffix] || "en";
+}
+
+// ──── Translations ────
+type Translations = {
+  pageTitle: string;
+  findOrder: string;
+  orderNumber: string;
+  orderNumberPlaceholder: string;
+  emailLabel: string;
+  emailPlaceholder: string;
+  searchButton: string;
+  searching: string;
+  selectProducts: string;
+  returnReason: string;
+  selectReason: string;
+  descriptionOptional: string;
+  describeProblem: string;
+  photosLabel: string;
+  addPhoto: string;
+  ibanLabel: string;
+  noteOptional: string;
+  notePlaceholder: string;
+  submitButton: string;
+  submitting: string;
+  product: string;
+  products: string;
+  successTitle: string;
+  successMessage: string;
+  backToStore: string;
+  storeNotFound: string;
+  checkUrl: string;
+  emailMismatch: string;
+  selectAtLeastOne: string;
+  existingReturn: string;
+  orderNotFound: string;
+  enterBoth: string;
+  // Default reasons fallback
+  reasonDamaged: string;
+  reasonWrongItem: string;
+  reasonNotAsDescribed: string;
+  reasonChangedMind: string;
+  reasonDefective: string;
+  reasonOther: string;
+};
+
+const TRANSLATIONS: Record<string, Translations> = {
+  sk: {
+    pageTitle: "Žiadosť o vrátenie tovaru",
+    findOrder: "Vyhľadajte vašu objednávku",
+    orderNumber: "Číslo objednávky",
+    orderNumberPlaceholder: "napr. 75501019",
+    emailLabel: "Email použitý pri objednávke",
+    emailPlaceholder: "vas@email.com",
+    searchButton: "Vyhľadať objednávku",
+    searching: "Vyhľadávam...",
+    selectProducts: "Vyberte produkty na vrátenie:",
+    returnReason: "Dôvod vrátenia:",
+    selectReason: "Vyberte dôvod...",
+    descriptionOptional: "Popis (voliteľné):",
+    describeProblem: "Opíšte problém...",
+    photosLabel: "Fotky poškodenia (max 4):",
+    addPhoto: "Pridať foto",
+    ibanLabel: "IBAN (číslo účtu pre vrátenie peňazí)",
+    noteOptional: "Poznámka (voliteľné)",
+    notePlaceholder: "Doplňujúce informácie...",
+    submitButton: "Odoslať žiadosť",
+    submitting: "Odosielam...",
+    product: "produkt",
+    products: "produkty",
+    successTitle: "Žiadosť odoslaná!",
+    successMessage: "Vašu žiadosť o vrátenie sme prijali. O stave vás budeme informovať emailom.",
+    backToStore: "Späť do obchodu",
+    storeNotFound: "Obchod nebol nájdený",
+    checkUrl: "Skontrolujte URL adresu.",
+    emailMismatch: "Email sa nezhoduje s objednávkou.",
+    selectAtLeastOne: "Vyberte aspoň jeden produkt na vrátenie.",
+    existingReturn: "Pre túto objednávku už existuje žiadosť o vrátenie.",
+    orderNotFound: "Objednávka nebola nájdená.",
+    enterBoth: "Zadajte číslo objednávky aj email.",
+    reasonDamaged: "Poškodený tovar",
+    reasonWrongItem: "Nesprávny tovar",
+    reasonNotAsDescribed: "Tovar nezodpovedá popisu",
+    reasonChangedMind: "Rozmyslel/a som si",
+    reasonDefective: "Chybný/nefunkčný tovar",
+    reasonOther: "Iný dôvod",
+  },
+  cs: {
+    pageTitle: "Žádost o vrácení zboží",
+    findOrder: "Vyhledejte vaši objednávku",
+    orderNumber: "Číslo objednávky",
+    orderNumberPlaceholder: "např. 75501019",
+    emailLabel: "Email použitý při objednávce",
+    emailPlaceholder: "vas@email.com",
+    searchButton: "Vyhledat objednávku",
+    searching: "Vyhledávám...",
+    selectProducts: "Vyberte produkty k vrácení:",
+    returnReason: "Důvod vrácení:",
+    selectReason: "Vyberte důvod...",
+    descriptionOptional: "Popis (volitelné):",
+    describeProblem: "Popište problém...",
+    photosLabel: "Fotky poškození (max 4):",
+    addPhoto: "Přidat foto",
+    ibanLabel: "IBAN (číslo účtu pro vrácení peněz)",
+    noteOptional: "Poznámka (volitelné)",
+    notePlaceholder: "Doplňující informace...",
+    submitButton: "Odeslat žádost",
+    submitting: "Odesílám...",
+    product: "produkt",
+    products: "produkty",
+    successTitle: "Žádost odeslána!",
+    successMessage: "Vaši žádost o vrácení jsme přijali. O stavu vás budeme informovat emailem.",
+    backToStore: "Zpět do obchodu",
+    storeNotFound: "Obchod nebyl nalezen",
+    checkUrl: "Zkontrolujte URL adresu.",
+    emailMismatch: "Email se neshoduje s objednávkou.",
+    selectAtLeastOne: "Vyberte alespoň jeden produkt k vrácení.",
+    existingReturn: "Pro tuto objednávku již existuje žádost o vrácení.",
+    orderNotFound: "Objednávka nebyla nalezena.",
+    enterBoth: "Zadejte číslo objednávky i email.",
+    reasonDamaged: "Poškozené zboží",
+    reasonWrongItem: "Nesprávné zboží",
+    reasonNotAsDescribed: "Zboží neodpovídá popisu",
+    reasonChangedMind: "Rozmyslel/a jsem si",
+    reasonDefective: "Vadné/nefunkční zboží",
+    reasonOther: "Jiný důvod",
+  },
+  hu: {
+    pageTitle: "Visszaküldési kérelem",
+    findOrder: "Keresse meg rendelését",
+    orderNumber: "Rendelési szám",
+    orderNumberPlaceholder: "pl. 75501019",
+    emailLabel: "A rendeléshez használt email",
+    emailPlaceholder: "az@email.com",
+    searchButton: "Rendelés keresése",
+    searching: "Keresés...",
+    selectProducts: "Válassza ki a visszaküldendő termékeket:",
+    returnReason: "Visszaküldés oka:",
+    selectReason: "Válasszon okot...",
+    descriptionOptional: "Leírás (opcionális):",
+    describeProblem: "Írja le a problémát...",
+    photosLabel: "Sérülés fotói (max 4):",
+    addPhoto: "Fotó hozzáadása",
+    ibanLabel: "IBAN (bankszámlaszám a visszatérítéshez)",
+    noteOptional: "Megjegyzés (opcionális)",
+    notePlaceholder: "További információk...",
+    submitButton: "Kérelem elküldése",
+    submitting: "Küldés...",
+    product: "termék",
+    products: "termékek",
+    successTitle: "Kérelem elküldve!",
+    successMessage: "Visszaküldési kérelmét megkaptuk. Az állapotáról emailben értesítjük.",
+    backToStore: "Vissza a boltba",
+    storeNotFound: "A bolt nem található",
+    checkUrl: "Ellenőrizze az URL címet.",
+    emailMismatch: "Az email nem egyezik a rendeléssel.",
+    selectAtLeastOne: "Válasszon ki legalább egy terméket.",
+    existingReturn: "Ehhez a rendeléshez már létezik visszaküldési kérelem.",
+    orderNotFound: "A rendelés nem található.",
+    enterBoth: "Adja meg a rendelési számot és az emailt.",
+    reasonDamaged: "Sérült áru",
+    reasonWrongItem: "Hibás termék érkezett",
+    reasonNotAsDescribed: "Nem felel meg a leírásnak",
+    reasonChangedMind: "Meggondoltam magam",
+    reasonDefective: "Hibás/nem működő termék",
+    reasonOther: "Egyéb ok",
+  },
+  pl: {
+    pageTitle: "Wniosek o zwrot towaru",
+    findOrder: "Wyszukaj swoje zamówienie",
+    orderNumber: "Numer zamówienia",
+    orderNumberPlaceholder: "np. 75501019",
+    emailLabel: "Email użyty przy zamówieniu",
+    emailPlaceholder: "twoj@email.com",
+    searchButton: "Wyszukaj zamówienie",
+    searching: "Wyszukiwanie...",
+    selectProducts: "Wybierz produkty do zwrotu:",
+    returnReason: "Powód zwrotu:",
+    selectReason: "Wybierz powód...",
+    descriptionOptional: "Opis (opcjonalnie):",
+    describeProblem: "Opisz problem...",
+    photosLabel: "Zdjęcia uszkodzenia (max 4):",
+    addPhoto: "Dodaj zdjęcie",
+    ibanLabel: "IBAN (numer konta do zwrotu pieniędzy)",
+    noteOptional: "Uwaga (opcjonalnie)",
+    notePlaceholder: "Dodatkowe informacje...",
+    submitButton: "Wyślij wniosek",
+    submitting: "Wysyłanie...",
+    product: "produkt",
+    products: "produkty",
+    successTitle: "Wniosek wysłany!",
+    successMessage: "Twój wniosek o zwrot został przyjęty. O statusie poinformujemy Cię emailem.",
+    backToStore: "Wróć do sklepu",
+    storeNotFound: "Sklep nie został znaleziony",
+    checkUrl: "Sprawdź adres URL.",
+    emailMismatch: "Email nie pasuje do zamówienia.",
+    selectAtLeastOne: "Wybierz co najmniej jeden produkt do zwrotu.",
+    existingReturn: "Dla tego zamówienia już istnieje wniosek o zwrot.",
+    orderNotFound: "Zamówienie nie zostało znalezione.",
+    enterBoth: "Podaj numer zamówienia i email.",
+    reasonDamaged: "Uszkodzony towar",
+    reasonWrongItem: "Niewłaściwy towar",
+    reasonNotAsDescribed: "Towar niezgodny z opisem",
+    reasonChangedMind: "Zmieniłem/am zdanie",
+    reasonDefective: "Wadliwy towar",
+    reasonOther: "Inny powód",
+  },
+  ro: {
+    pageTitle: "Cerere de returnare",
+    findOrder: "Căutați comanda dvs.",
+    orderNumber: "Numărul comenzii",
+    orderNumberPlaceholder: "ex. 75501019",
+    emailLabel: "Emailul folosit la comandă",
+    emailPlaceholder: "dvs@email.com",
+    searchButton: "Caută comanda",
+    searching: "Se caută...",
+    selectProducts: "Selectați produsele pentru returnare:",
+    returnReason: "Motivul returnării:",
+    selectReason: "Selectați motivul...",
+    descriptionOptional: "Descriere (opțional):",
+    describeProblem: "Descrieți problema...",
+    photosLabel: "Fotografii deteriorare (max 4):",
+    addPhoto: "Adaugă foto",
+    ibanLabel: "IBAN (cont bancar pentru rambursare)",
+    noteOptional: "Notă (opțional)",
+    notePlaceholder: "Informații suplimentare...",
+    submitButton: "Trimite cererea",
+    submitting: "Se trimite...",
+    product: "produs",
+    products: "produse",
+    successTitle: "Cerere trimisă!",
+    successMessage: "Cererea dvs. de returnare a fost primită. Vă vom informa prin email despre status.",
+    backToStore: "Înapoi la magazin",
+    storeNotFound: "Magazinul nu a fost găsit",
+    checkUrl: "Verificați adresa URL.",
+    emailMismatch: "Emailul nu corespunde cu comanda.",
+    selectAtLeastOne: "Selectați cel puțin un produs pentru returnare.",
+    existingReturn: "Pentru această comandă există deja o cerere de returnare.",
+    orderNotFound: "Comanda nu a fost găsită.",
+    enterBoth: "Introduceți numărul comenzii și emailul.",
+    reasonDamaged: "Produs deteriorat",
+    reasonWrongItem: "Produs greșit",
+    reasonNotAsDescribed: "Produsul nu corespunde descrierii",
+    reasonChangedMind: "M-am răzgândit",
+    reasonDefective: "Produs defect",
+    reasonOther: "Alt motiv",
+  },
+  bg: {
+    pageTitle: "Заявка за връщане",
+    findOrder: "Намерете вашата поръчка",
+    orderNumber: "Номер на поръчката",
+    orderNumberPlaceholder: "напр. 75501019",
+    emailLabel: "Имейл от поръчката",
+    emailPlaceholder: "vash@email.com",
+    searchButton: "Търси поръчка",
+    searching: "Търсене...",
+    selectProducts: "Изберете продукти за връщане:",
+    returnReason: "Причина за връщане:",
+    selectReason: "Изберете причина...",
+    descriptionOptional: "Описание (по избор):",
+    describeProblem: "Опишете проблема...",
+    photosLabel: "Снимки на повредата (макс. 4):",
+    addPhoto: "Добави снимка",
+    ibanLabel: "IBAN (банкова сметка за възстановяване)",
+    noteOptional: "Бележка (по избор)",
+    notePlaceholder: "Допълнителна информация...",
+    submitButton: "Изпрати заявка",
+    submitting: "Изпращане...",
+    product: "продукт",
+    products: "продукти",
+    successTitle: "Заявката е изпратена!",
+    successMessage: "Вашата заявка за връщане е получена. Ще ви уведомим по имейл за статуса.",
+    backToStore: "Обратно към магазина",
+    storeNotFound: "Магазинът не е намерен",
+    checkUrl: "Проверете URL адреса.",
+    emailMismatch: "Имейлът не съвпада с поръчката.",
+    selectAtLeastOne: "Изберете поне един продукт за връщане.",
+    existingReturn: "За тази поръчка вече съществува заявка за връщане.",
+    orderNotFound: "Поръчката не е намерена.",
+    enterBoth: "Въведете номер на поръчката и имейл.",
+    reasonDamaged: "Повреден продукт",
+    reasonWrongItem: "Грешен продукт",
+    reasonNotAsDescribed: "Продуктът не отговаря на описанието",
+    reasonChangedMind: "Промених решението си",
+    reasonDefective: "Дефектен продукт",
+    reasonOther: "Друга причина",
+  },
+  hr: {
+    pageTitle: "Zahtjev za povrat",
+    findOrder: "Pronađite svoju narudžbu",
+    orderNumber: "Broj narudžbe",
+    orderNumberPlaceholder: "npr. 75501019",
+    emailLabel: "Email korišten pri narudžbi",
+    emailPlaceholder: "vas@email.com",
+    searchButton: "Pretraži narudžbu",
+    searching: "Pretraživanje...",
+    selectProducts: "Odaberite proizvode za povrat:",
+    returnReason: "Razlog povrata:",
+    selectReason: "Odaberite razlog...",
+    descriptionOptional: "Opis (opcionalno):",
+    describeProblem: "Opišite problem...",
+    photosLabel: "Fotografije oštećenja (max 4):",
+    addPhoto: "Dodaj fotografiju",
+    ibanLabel: "IBAN (bankovni račun za povrat novca)",
+    noteOptional: "Napomena (opcionalno)",
+    notePlaceholder: "Dodatne informacije...",
+    submitButton: "Pošalji zahtjev",
+    submitting: "Šaljem...",
+    product: "proizvod",
+    products: "proizvodi",
+    successTitle: "Zahtjev poslan!",
+    successMessage: "Vaš zahtjev za povrat je zaprimljen. O statusu ćemo vas obavijestiti emailom.",
+    backToStore: "Natrag u trgovinu",
+    storeNotFound: "Trgovina nije pronađena",
+    checkUrl: "Provjerite URL adresu.",
+    emailMismatch: "Email se ne podudara s narudžbom.",
+    selectAtLeastOne: "Odaberite barem jedan proizvod za povrat.",
+    existingReturn: "Za ovu narudžbu već postoji zahtjev za povrat.",
+    orderNotFound: "Narudžba nije pronađena.",
+    enterBoth: "Unesite broj narudžbe i email.",
+    reasonDamaged: "Oštećen proizvod",
+    reasonWrongItem: "Pogrešan proizvod",
+    reasonNotAsDescribed: "Proizvod ne odgovara opisu",
+    reasonChangedMind: "Predomislio/la sam se",
+    reasonDefective: "Neispravan proizvod",
+    reasonOther: "Drugi razlog",
+  },
+  bs: {
+    pageTitle: "Zahtjev za povrat",
+    findOrder: "Pronađite svoju narudžbu",
+    orderNumber: "Broj narudžbe",
+    orderNumberPlaceholder: "npr. 75501019",
+    emailLabel: "Email korišten pri narudžbi",
+    emailPlaceholder: "vas@email.com",
+    searchButton: "Pretraži narudžbu",
+    searching: "Pretraživanje...",
+    selectProducts: "Odaberite proizvode za povrat:",
+    returnReason: "Razlog povrata:",
+    selectReason: "Odaberite razlog...",
+    descriptionOptional: "Opis (opcionalno):",
+    describeProblem: "Opišite problem...",
+    photosLabel: "Fotografije oštećenja (max 4):",
+    addPhoto: "Dodaj fotografiju",
+    ibanLabel: "IBAN (bankovni račun za povrat novca)",
+    noteOptional: "Napomena (opcionalno)",
+    notePlaceholder: "Dodatne informacije...",
+    submitButton: "Pošalji zahtjev",
+    submitting: "Šaljem...",
+    product: "proizvod",
+    products: "proizvodi",
+    successTitle: "Zahtjev poslan!",
+    successMessage: "Vaš zahtjev za povrat je zaprimljen. O statusu ćemo vas obavijestiti emailom.",
+    backToStore: "Nazad u trgovinu",
+    storeNotFound: "Trgovina nije pronađena",
+    checkUrl: "Provjerite URL adresu.",
+    emailMismatch: "Email se ne podudara s narudžbom.",
+    selectAtLeastOne: "Odaberite barem jedan proizvod za povrat.",
+    existingReturn: "Za ovu narudžbu već postoji zahtjev za povrat.",
+    orderNotFound: "Narudžba nije pronađena.",
+    enterBoth: "Unesite broj narudžbe i email.",
+    reasonDamaged: "Oštećen proizvod",
+    reasonWrongItem: "Pogrešan proizvod",
+    reasonNotAsDescribed: "Proizvod ne odgovara opisu",
+    reasonChangedMind: "Predomislio/la sam se",
+    reasonDefective: "Neispravan proizvod",
+    reasonOther: "Drugi razlog",
+  },
+  de: {
+    pageTitle: "Rückgabeantrag",
+    findOrder: "Finden Sie Ihre Bestellung",
+    orderNumber: "Bestellnummer",
+    orderNumberPlaceholder: "z.B. 75501019",
+    emailLabel: "Bei der Bestellung verwendete E-Mail",
+    emailPlaceholder: "ihre@email.com",
+    searchButton: "Bestellung suchen",
+    searching: "Suche...",
+    selectProducts: "Wählen Sie die Produkte zur Rückgabe:",
+    returnReason: "Rückgabegrund:",
+    selectReason: "Grund auswählen...",
+    descriptionOptional: "Beschreibung (optional):",
+    describeProblem: "Beschreiben Sie das Problem...",
+    photosLabel: "Fotos des Schadens (max. 4):",
+    addPhoto: "Foto hinzufügen",
+    ibanLabel: "IBAN (Bankkonto für Rückerstattung)",
+    noteOptional: "Anmerkung (optional)",
+    notePlaceholder: "Zusätzliche Informationen...",
+    submitButton: "Antrag absenden",
+    submitting: "Wird gesendet...",
+    product: "Produkt",
+    products: "Produkte",
+    successTitle: "Antrag gesendet!",
+    successMessage: "Ihr Rückgabeantrag wurde empfangen. Wir informieren Sie per E-Mail über den Status.",
+    backToStore: "Zurück zum Shop",
+    storeNotFound: "Shop nicht gefunden",
+    checkUrl: "Überprüfen Sie die URL-Adresse.",
+    emailMismatch: "Die E-Mail stimmt nicht mit der Bestellung überein.",
+    selectAtLeastOne: "Wählen Sie mindestens ein Produkt zur Rückgabe.",
+    existingReturn: "Für diese Bestellung existiert bereits ein Rückgabeantrag.",
+    orderNotFound: "Bestellung nicht gefunden.",
+    enterBoth: "Geben Sie Bestellnummer und E-Mail ein.",
+    reasonDamaged: "Beschädigte Ware",
+    reasonWrongItem: "Falscher Artikel",
+    reasonNotAsDescribed: "Entspricht nicht der Beschreibung",
+    reasonChangedMind: "Meinung geändert",
+    reasonDefective: "Defekter Artikel",
+    reasonOther: "Anderer Grund",
+  },
+  sr: {
+    pageTitle: "Захтев за повраћај",
+    findOrder: "Пронађите вашу поруџбину",
+    orderNumber: "Број поруџбине",
+    orderNumberPlaceholder: "нпр. 75501019",
+    emailLabel: "Имејл коришћен при поруџбини",
+    emailPlaceholder: "vas@email.com",
+    searchButton: "Претражи поруџбину",
+    searching: "Претраживање...",
+    selectProducts: "Изаберите производе за повраћај:",
+    returnReason: "Разлог повраћаја:",
+    selectReason: "Изаберите разлог...",
+    descriptionOptional: "Опис (опционално):",
+    describeProblem: "Опишите проблем...",
+    photosLabel: "Фотографије оштећења (макс. 4):",
+    addPhoto: "Додај фотографију",
+    ibanLabel: "IBAN (банковни рачун за повраћај новца)",
+    noteOptional: "Напомена (опционално)",
+    notePlaceholder: "Додатне информације...",
+    submitButton: "Пошаљи захтев",
+    submitting: "Шаљем...",
+    product: "производ",
+    products: "производи",
+    successTitle: "Захтев послат!",
+    successMessage: "Ваш захтев за повраћај је примљен. О статусу ћемо вас обавестити имејлом.",
+    backToStore: "Назад у продавницу",
+    storeNotFound: "Продавница није пронађена",
+    checkUrl: "Проверите URL адресу.",
+    emailMismatch: "Имејл се не подудара са поруџбином.",
+    selectAtLeastOne: "Изаберите бар један производ за повраћај.",
+    existingReturn: "За ову поруџбину већ постоји захтев за повраћај.",
+    orderNotFound: "Поруџбина није пронађена.",
+    enterBoth: "Унесите број поруџбине и имејл.",
+    reasonDamaged: "Оштећен производ",
+    reasonWrongItem: "Погрешан производ",
+    reasonNotAsDescribed: "Производ не одговара опису",
+    reasonChangedMind: "Предомислио/ла сам се",
+    reasonDefective: "Неисправан производ",
+    reasonOther: "Други разлог",
+  },
+  sl: {
+    pageTitle: "Zahtevek za vračilo",
+    findOrder: "Poiščite vaše naročilo",
+    orderNumber: "Številka naročila",
+    orderNumberPlaceholder: "npr. 75501019",
+    emailLabel: "Email uporabljen pri naročilu",
+    emailPlaceholder: "vas@email.com",
+    searchButton: "Poišči naročilo",
+    searching: "Iskanje...",
+    selectProducts: "Izberite izdelke za vračilo:",
+    returnReason: "Razlog vračila:",
+    selectReason: "Izberite razlog...",
+    descriptionOptional: "Opis (neobvezno):",
+    describeProblem: "Opišite problem...",
+    photosLabel: "Fotografije poškodbe (max 4):",
+    addPhoto: "Dodaj fotografijo",
+    ibanLabel: "IBAN (bančni račun za vračilo denarja)",
+    noteOptional: "Opomba (neobvezno)",
+    notePlaceholder: "Dodatne informacije...",
+    submitButton: "Pošlji zahtevek",
+    submitting: "Pošiljam...",
+    product: "izdelek",
+    products: "izdelki",
+    successTitle: "Zahtevek poslan!",
+    successMessage: "Vaš zahtevek za vračilo je bil prejet. O statusu vas bomo obvestili po emailu.",
+    backToStore: "Nazaj v trgovino",
+    storeNotFound: "Trgovina ni najdena",
+    checkUrl: "Preverite URL naslov.",
+    emailMismatch: "Email se ne ujema z naročilom.",
+    selectAtLeastOne: "Izberite vsaj en izdelek za vračilo.",
+    existingReturn: "Za to naročilo že obstaja zahtevek za vračilo.",
+    orderNotFound: "Naročilo ni najdeno.",
+    enterBoth: "Vnesite številko naročila in email.",
+    reasonDamaged: "Poškodovan izdelek",
+    reasonWrongItem: "Napačen izdelek",
+    reasonNotAsDescribed: "Izdelek ne ustreza opisu",
+    reasonChangedMind: "Premislil/a sem si",
+    reasonDefective: "Okvarjen izdelek",
+    reasonOther: "Drug razlog",
+  },
+  el: {
+    pageTitle: "Αίτηση επιστροφής",
+    findOrder: "Βρείτε την παραγγελία σας",
+    orderNumber: "Αριθμός παραγγελίας",
+    orderNumberPlaceholder: "π.χ. 75501019",
+    emailLabel: "Email που χρησιμοποιήθηκε στην παραγγελία",
+    emailPlaceholder: "to@email.com",
+    searchButton: "Αναζήτηση παραγγελίας",
+    searching: "Αναζήτηση...",
+    selectProducts: "Επιλέξτε προϊόντα για επιστροφή:",
+    returnReason: "Λόγος επιστροφής:",
+    selectReason: "Επιλέξτε λόγο...",
+    descriptionOptional: "Περιγραφή (προαιρετικά):",
+    describeProblem: "Περιγράψτε το πρόβλημα...",
+    photosLabel: "Φωτογραφίες ζημιάς (μέγ. 4):",
+    addPhoto: "Προσθήκη φωτο",
+    ibanLabel: "IBAN (τραπεζικός λογαριασμός για επιστροφή χρημάτων)",
+    noteOptional: "Σημείωση (προαιρετικά)",
+    notePlaceholder: "Πρόσθετες πληροφορίες...",
+    submitButton: "Υποβολή αιτήματος",
+    submitting: "Υποβολή...",
+    product: "προϊόν",
+    products: "προϊόντα",
+    successTitle: "Το αίτημα υποβλήθηκε!",
+    successMessage: "Το αίτημα επιστροφής σας ελήφθη. Θα σας ενημερώσουμε μέσω email για την κατάσταση.",
+    backToStore: "Πίσω στο κατάστημα",
+    storeNotFound: "Το κατάστημα δεν βρέθηκε",
+    checkUrl: "Ελέγξτε τη διεύθυνση URL.",
+    emailMismatch: "Το email δεν ταιριάζει με την παραγγελία.",
+    selectAtLeastOne: "Επιλέξτε τουλάχιστον ένα προϊόν για επιστροφή.",
+    existingReturn: "Υπάρχει ήδη αίτημα επιστροφής για αυτή την παραγγελία.",
+    orderNotFound: "Η παραγγελία δεν βρέθηκε.",
+    enterBoth: "Εισάγετε τον αριθμό παραγγελίας και το email.",
+    reasonDamaged: "Κατεστραμμένο προϊόν",
+    reasonWrongItem: "Λάθος προϊόν",
+    reasonNotAsDescribed: "Δεν αντιστοιχεί στην περιγραφή",
+    reasonChangedMind: "Άλλαξα γνώμη",
+    reasonDefective: "Ελαττωματικό προϊόν",
+    reasonOther: "Άλλος λόγος",
+  },
+  it: {
+    pageTitle: "Richiesta di reso",
+    findOrder: "Trova il tuo ordine",
+    orderNumber: "Numero ordine",
+    orderNumberPlaceholder: "es. 75501019",
+    emailLabel: "Email utilizzata nell'ordine",
+    emailPlaceholder: "tuo@email.com",
+    searchButton: "Cerca ordine",
+    searching: "Ricerca...",
+    selectProducts: "Seleziona i prodotti da restituire:",
+    returnReason: "Motivo del reso:",
+    selectReason: "Seleziona motivo...",
+    descriptionOptional: "Descrizione (facoltativo):",
+    describeProblem: "Descrivi il problema...",
+    photosLabel: "Foto del danno (max 4):",
+    addPhoto: "Aggiungi foto",
+    ibanLabel: "IBAN (conto bancario per il rimborso)",
+    noteOptional: "Nota (facoltativo)",
+    notePlaceholder: "Informazioni aggiuntive...",
+    submitButton: "Invia richiesta",
+    submitting: "Invio...",
+    product: "prodotto",
+    products: "prodotti",
+    successTitle: "Richiesta inviata!",
+    successMessage: "La tua richiesta di reso è stata ricevuta. Ti informeremo via email sullo stato.",
+    backToStore: "Torna al negozio",
+    storeNotFound: "Negozio non trovato",
+    checkUrl: "Controlla l'indirizzo URL.",
+    emailMismatch: "L'email non corrisponde all'ordine.",
+    selectAtLeastOne: "Seleziona almeno un prodotto da restituire.",
+    existingReturn: "Esiste già una richiesta di reso per questo ordine.",
+    orderNotFound: "Ordine non trovato.",
+    enterBoth: "Inserisci il numero dell'ordine e l'email.",
+    reasonDamaged: "Prodotto danneggiato",
+    reasonWrongItem: "Prodotto sbagliato",
+    reasonNotAsDescribed: "Non corrisponde alla descrizione",
+    reasonChangedMind: "Ho cambiato idea",
+    reasonDefective: "Prodotto difettoso",
+    reasonOther: "Altro motivo",
+  },
+  en: {
+    pageTitle: "Return Request",
+    findOrder: "Find your order",
+    orderNumber: "Order number",
+    orderNumberPlaceholder: "e.g. 75501019",
+    emailLabel: "Email used for the order",
+    emailPlaceholder: "your@email.com",
+    searchButton: "Search order",
+    searching: "Searching...",
+    selectProducts: "Select products to return:",
+    returnReason: "Return reason:",
+    selectReason: "Select reason...",
+    descriptionOptional: "Description (optional):",
+    describeProblem: "Describe the problem...",
+    photosLabel: "Photos of damage (max 4):",
+    addPhoto: "Add photo",
+    ibanLabel: "IBAN (bank account for refund)",
+    noteOptional: "Note (optional)",
+    notePlaceholder: "Additional information...",
+    submitButton: "Submit request",
+    submitting: "Submitting...",
+    product: "product",
+    products: "products",
+    successTitle: "Request submitted!",
+    successMessage: "Your return request has been received. We will notify you by email about the status.",
+    backToStore: "Back to store",
+    storeNotFound: "Store not found",
+    checkUrl: "Check the URL address.",
+    emailMismatch: "Email does not match the order.",
+    selectAtLeastOne: "Select at least one product to return.",
+    existingReturn: "A return request already exists for this order.",
+    orderNotFound: "Order not found.",
+    enterBoth: "Enter the order number and email.",
+    reasonDamaged: "Damaged product",
+    reasonWrongItem: "Wrong item",
+    reasonNotAsDescribed: "Not as described",
+    reasonChangedMind: "Changed my mind",
+    reasonDefective: "Defective product",
+    reasonOther: "Other reason",
+  },
+};
+
+function getTranslations(slug: string): Translations {
+  const lang = getLang(slug);
+  return TRANSLATIONS[lang] || TRANSLATIONS.en;
+}
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
   const slug = params.shop || "";
   const shopDomain = SHOP_SLUGS[slug];
   const shopName = SHOP_NAMES[slug] || slug;
 
+  const t = getTranslations(slug);
+  const lang = getLang(slug);
+
   if (!shopDomain) {
-    return json({ error: "Store not found", shopName: "", shopDomain: "", reasons: [], brandColor: "#333" });
+    return json({ error: "Store not found", shopName: "", shopDomain: "", reasons: [], brandColor: "#333", t, lang });
   }
 
   const brandColor = slug.startsWith("papilora") ? "#6B2D8B" : "#D4A853";
@@ -62,7 +700,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     orderBy: { sortOrder: "asc" },
   });
 
-  return json({ error: null, shopName, shopDomain, reasons, brandColor });
+  return json({ error: null, shopName, shopDomain, reasons, brandColor, t, lang });
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
@@ -362,7 +1000,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 };
 
 export default function ReturnsPortal() {
-  const { error: loaderError, shopName, shopDomain, reasons, brandColor } = useLoaderData<typeof loader>();
+  const { error: loaderError, shopName, shopDomain, reasons, brandColor, t, lang } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -374,16 +1012,16 @@ export default function ReturnsPortal() {
 
   if (loaderError) {
     return (
-      <html lang="sk">
+      <html lang={lang || "en"}>
         <head>
           <meta charSet="utf-8" />
           <meta name="viewport" content="width=device-width,initial-scale=1" />
-          <title>Obchod nebol nájdený</title>
+          <title>{t?.storeNotFound || "Store not found"}</title>
         </head>
         <body style={{ fontFamily: "system-ui, sans-serif", display: "flex", justifyContent: "center", alignItems: "center", minHeight: "100vh", background: "#f5f5f5" }}>
           <div style={{ textAlign: "center", padding: 40 }}>
-            <h1>Obchod nebol nájdený</h1>
-            <p>Skontrolujte URL adresu.</p>
+            <h1>{t?.storeNotFound || "Store not found"}</h1>
+            <p>{t?.checkUrl || "Check the URL address."}</p>
           </div>
         </body>
       </html>
@@ -395,11 +1033,11 @@ export default function ReturnsPortal() {
   const error = (actionData as any)?.error;
 
   return (
-    <html lang="sk">
+    <html lang={lang}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Vrátenie tovaru - {shopName}</title>
+        <title>{t.pageTitle} - {shopName}</title>
         <style dangerouslySetInnerHTML={{ __html: `
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f7; color: #333; min-height: 100vh; }
@@ -455,16 +1093,15 @@ export default function ReturnsPortal() {
       <body>
         <div className="header">
           <h1>{shopName}</h1>
-          <p>Žiadosť o vrátenie / reklamáciu</p>
+          <p>{t.pageTitle}</p>
         </div>
 
         <div className="container">
           {step === "success" ? (
             <div className="card">
               <div className="success">
-                <h2 style={{ marginBottom: 10, fontSize: 22 }}>✅ Žiadosť odoslaná!</h2>
-                <p>Vaša žiadosť o vrátenie bola úspešne odoslaná.</p>
-                <p style={{ marginTop: 8 }}>Budeme vás kontaktovať na váš email s ďalšími inštrukciami.</p>
+                <h2 style={{ marginBottom: 10, fontSize: 22 }}>✅ {t.successTitle}</h2>
+                <p>{t.successMessage}</p>
               </div>
             </div>
           ) : step === "form" && order ? (
@@ -481,6 +1118,7 @@ export default function ReturnsPortal() {
               setItemNotes={setItemNotes}
               itemPhotos={itemPhotos}
               setItemPhotos={setItemPhotos}
+              t={t}
             />
           ) : (
             <>
@@ -490,20 +1128,20 @@ export default function ReturnsPortal() {
                 <div className="step" />
               </div>
               <div className="card">
-                <h2 style={{ marginBottom: 20, fontSize: 20 }}>Vyhľadajte vašu objednávku</h2>
+                <h2 style={{ marginBottom: 20, fontSize: 20 }}>{t.findOrder}</h2>
                 {error && <div className="error">{error}</div>}
                 <Form method="post">
                   <input type="hidden" name="intent" value="lookup" />
                   <div className="form-group">
-                    <label>Číslo objednávky</label>
-                    <input type="text" name="orderNumber" placeholder="napr. 75501019" required />
+                    <label>{t.orderNumber}</label>
+                    <input type="text" name="orderNumber" placeholder={t.orderNumberPlaceholder} required />
                   </div>
                   <div className="form-group">
-                    <label>Email použitý pri objednávke</label>
-                    <input type="email" name="email" placeholder="vas@email.com" required />
+                    <label>{t.emailLabel}</label>
+                    <input type="email" name="email" placeholder={t.emailPlaceholder} required />
                   </div>
                   <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-                    {isSubmitting ? "Hľadám..." : "Vyhľadať objednávku"}
+                    {isSubmitting ? t.searching : t.searchButton}
                   </button>
                 </Form>
               </div>
@@ -519,7 +1157,7 @@ export default function ReturnsPortal() {
   );
 }
 
-function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSelectedItems, itemReasons, setItemReasons, itemNotes, setItemNotes, itemPhotos, setItemPhotos }: any) {
+function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSelectedItems, itemReasons, setItemReasons, itemNotes, setItemNotes, itemPhotos, setItemPhotos, t }: any) {
   const toggleItem = (itemId: string) => {
     setSelectedItems((prev: string[]) =>
       prev.includes(itemId) ? prev.filter((id: string) => id !== itemId) : [...prev, itemId]
@@ -550,12 +1188,12 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
         )} />
 
         <div className="card">
-          <h2 style={{ marginBottom: 4, fontSize: 20 }}>Objednávka {order.name}</h2>
+          <h2 style={{ marginBottom: 4, fontSize: 20 }}>{t.orderNumber} {order.name}</h2>
           <p style={{ color: "#777", marginBottom: 20, fontSize: 14 }}>{order.email}</p>
 
           {error && <div className="error">{error}</div>}
 
-          <h3 style={{ marginBottom: 12, fontSize: 16 }}>Vyberte produkty na vrátenie:</h3>
+          <h3 style={{ marginBottom: 12, fontSize: 16 }}>{t.selectProducts}</h3>
 
           {order.lineItems.map((item: any) => (
             <div key={item.id}>
@@ -581,45 +1219,45 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
 
               {selectedItems.includes(item.id) && (
                 <div className="item-details">
-                  <label style={{ fontSize: 13, fontWeight: 600 }}>Dôvod vrátenia:</label>
+                  <label style={{ fontSize: 13, fontWeight: 600 }}>{t.returnReason}</label>
                   <select
                     value={itemReasons[item.id] || ""}
                     onChange={(e) => setItemReasons((prev: any) => ({ ...prev, [item.id]: e.target.value }))}
                     style={{ width: "100%", padding: 10, borderRadius: 6, border: "1px solid #ddd", fontSize: 14 }}
                   >
-                    <option value="">Vyberte dôvod...</option>
+                    <option value="">{t.selectReason}</option>
                     {reasons.length > 0 ? (
                       reasons.map((r: any) => (
                         <option key={r.id} value={r.id}>{r.label}</option>
                       ))
                     ) : (
                       <>
-                        <option value="damaged">Poškodený tovar</option>
-                        <option value="wrong_item">Nesprávny tovar</option>
-                        <option value="not_as_described">Tovar nezodpovedá popisu</option>
-                        <option value="changed_mind">Rozmyslel/a som si</option>
-                        <option value="defective">Chybný/nefunkčný tovar</option>
-                        <option value="other">Iný dôvod</option>
+                        <option value="damaged">{t.reasonDamaged}</option>
+                        <option value="wrong_item">{t.reasonWrongItem}</option>
+                        <option value="not_as_described">{t.reasonNotAsDescribed}</option>
+                        <option value="changed_mind">{t.reasonChangedMind}</option>
+                        <option value="defective">{t.reasonDefective}</option>
+                        <option value="other">{t.reasonOther}</option>
                       </>
                     )}
                   </select>
-                  <label style={{ fontSize: 13, fontWeight: 600, marginTop: 8, display: "block" }}>Popis (voliteľné):</label>
+                  <label style={{ fontSize: 13, fontWeight: 600, marginTop: 8, display: "block" }}>{t.descriptionOptional}</label>
                   <textarea
                     value={itemNotes[item.id] || ""}
                     onChange={(e) => setItemNotes((prev: any) => ({ ...prev, [item.id]: e.target.value }))}
-                    placeholder="Opíšte problém..."
+                    placeholder={t.describeProblem}
                     rows={2}
                     style={{ width: "100%", padding: 10, borderRadius: 6, border: "1px solid #ddd", fontSize: 14 }}
                   />
 
                   <label style={{ fontSize: 13, fontWeight: 600, marginTop: 12, display: "block" }}>
-                    Fotky poškodenia (max 4):
+                    {t.photosLabel}
                   </label>
                   <div className="photo-upload-area">
                     <div className="photo-previews">
                       {(itemPhotos[item.id] || []).map((photo: any, idx: number) => (
                         <div key={idx} className="photo-preview">
-                          <img src={photo.preview} alt={`Foto ${idx + 1}`} />
+                          <img src={photo.preview} alt={`${idx + 1}`} />
                           <button
                             type="button"
                             className="photo-remove"
@@ -656,7 +1294,7 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
                             }}
                           />
                           <span className="photo-add-icon">+</span>
-                          <span className="photo-add-text">Pridať foto</span>
+                          <span className="photo-add-text">{t.addPhoto}</span>
                         </label>
                       )}
                     </div>
@@ -669,12 +1307,12 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
 
         <div className="card">
           <div className="form-group">
-            <label>IBAN (číslo účtu pre vrátenie peňazí)</label>
+            <label>{t.ibanLabel}</label>
             <input type="text" name="customerIban" placeholder="SK89 0200 0000 0012 3456 7890" />
           </div>
           <div className="form-group">
-            <label>Poznámka (voliteľné)</label>
-            <textarea name="customerNotes" rows={3} placeholder="Doplňujúce informácie..." />
+            <label>{t.noteOptional}</label>
+            <textarea name="customerNotes" rows={3} placeholder={t.notePlaceholder} />
           </div>
 
           {/* Hidden file inputs for photo uploads */}
@@ -696,7 +1334,7 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={isSubmitting || selectedItems.length === 0}>
-            {isSubmitting ? "Odosielam..." : `Odoslať žiadosť (${selectedItems.length} ${selectedItems.length === 1 ? "produkt" : "produkty"})`}
+            {isSubmitting ? t.submitting : `${t.submitButton} (${selectedItems.length} ${selectedItems.length === 1 ? t.product : t.products})`}
           </button>
         </div>
       </Form>
