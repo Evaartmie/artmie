@@ -20,5 +20,6 @@ scopes = "read_customers,read_orders,read_products,read_returns,write_orders,wri
 redirect_urls = [
   "https://web-production-b73a4.up.railway.app/auth/callback",
   "https://web-production-b73a4.up.railway.app/auth/shopify/callback",
-  "https://web-production-b73a4.up.railway.app/api/auth/callback"
+  "https://web-production-b73a4.up.railway.app/api/auth/callback",
+  "https://web-production-b73a4.up.railway.app/auth/install"
 ]
