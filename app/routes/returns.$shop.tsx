@@ -2,6 +2,7 @@ import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, useActionData, Form, useNavigation } from "@remix-run/react";
 import { prisma } from "../db.server";
+import { unauthenticated } from "../shopify.server";
 import { useState } from "react";
 
 // Map of URL slugs to myshopify domains
@@ -84,82 +85,58 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       return json({ error: "Zadajte číslo objednávky aj email.", step: "lookup" });
     }
 
-    // Get store session for API access
-    const session = await prisma.session.findFirst({
-      where: { shop: shopDomain },
-      orderBy: { expires: "desc" },
-    });
-
-    if (!session?.accessToken) {
-      return json({ error: "Store nie je pripojený. Kontaktujte obchod.", step: "lookup" });
-    }
-
-    // Query Shopify for the order
+    // Get Shopify admin API access via SDK
     try {
-      const response = await fetch(
-        `https://${shopDomain}/admin/api/2026-04/graphql.json`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Shopify-Access-Token": session.accessToken,
-          },
-          body: JSON.stringify({
-            query: `
-              query OrderLookup($query: String!) {
-                orders(first: 1, query: $query) {
+      const { admin } = await unauthenticated.admin(shopDomain);
+
+      const result = await admin.graphql(
+        `query OrderLookup($query: String!) {
+          orders(first: 1, query: $query) {
+            edges {
+              node {
+                id
+                name
+                email
+                createdAt
+                displayFulfillmentStatus
+                currencyCode
+                customer {
+                  id
+                  email
+                  displayName
+                }
+                lineItems(first: 50) {
                   edges {
                     node {
                       id
-                      name
-                      email
-                      createdAt
-                      displayFulfillmentStatus
-                      currencyCode
-                      customer {
-                        id
-                        email
-                        displayName
-                      }
-                      lineItems(first: 50) {
-                        edges {
-                          node {
-                            id
-                            title
-                            variantTitle
-                            sku
-                            quantity
-                            originalUnitPriceSet {
-                              shopMoney {
-                                amount
-                                currencyCode
-                              }
-                            }
-                            image {
-                              url(transform: { maxWidth: 100 })
-                            }
-                          }
+                      title
+                      variantTitle
+                      sku
+                      quantity
+                      originalUnitPriceSet {
+                        shopMoney {
+                          amount
+                          currencyCode
                         }
+                      }
+                      image {
+                        url(transform: { maxWidth: 100 })
                       }
                     }
                   }
                 }
               }
-            `,
-            variables: {
-              query: `name:${orderNumber.replace(/^#/, '')}`,
-            },
-          }),
-        }
+            }
+          }
+        }`,
+        { variables: { query: `name:${orderNumber.replace(/^#/, '')}` } }
       );
 
-      const result = await response.json();
-      console.log("Shopify API response:", JSON.stringify(result, null, 2));
-      const order = result?.data?.orders?.edges?.[0]?.node;
+      const data = await result.json();
+      const order = data?.data?.orders?.edges?.[0]?.node;
 
       if (!order) {
-        const debugInfo = `Shop: ${shopDomain}, Query: name:${orderNumber.replace(/^#/, '')}, Errors: ${JSON.stringify(result?.errors || "none")}`;
-        return json({ error: `Objednávka nebola nájdená. (Debug: ${debugInfo})`, step: "lookup" });
+        return json({ error: `Objednávka nebola nájdená. Skontrolujte číslo objednávky.`, step: "lookup" });
       }
 
       // Verify email
@@ -208,7 +185,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       });
     } catch (err: any) {
       console.error("Order lookup error:", err);
-      return json({ error: "Chyba pri vyhľadávaní objednávky. Skúste znova.", step: "lookup" });
+      return json({ error: `Chyba pri vyhľadávaní: ${err.message || "Skúste znova."}`, step: "lookup" });
     }
   }
 
