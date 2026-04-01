@@ -22,6 +22,11 @@ export async function requireAdminAuth(request: Request) {
 
 export async function verifyAdminPassword(password: string): Promise<boolean> {
   const adminPassword = process.env.ADMIN_PASSWORD;
+  console.log("=== LOGIN ATTEMPT ===");
+  console.log("ADMIN_PASSWORD env exists:", !!adminPassword);
+  console.log("ADMIN_PASSWORD length:", adminPassword ? adminPassword.length : 0);
+  console.log("Input password length:", password.length);
+  console.log("Passwords match:", password === adminPassword);
   if (!adminPassword) {
     console.error("ADMIN_PASSWORD environment variable not set!");
     return false;
