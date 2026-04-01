@@ -148,7 +148,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
             }
           }
         }`,
-            variables: { query: `name:${orderNumber.replace(/^#/, '')}` },
+            variables: { query: `${orderNumber.replace(/^#/, '')}` },
           }),
         }
       );
