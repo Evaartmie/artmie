@@ -86,52 +86,55 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 
     // Get Shopify admin API access
     try {
-      // Try to find any valid session for this shop
+      // Find ALL sessions for this shop
       const sessions = await prisma.session.findMany({
         where: { shop: shopDomain },
       });
 
-      // Find offline session first (id starts with "offline_"), then any with token
-      const offlineSession = sessions.find(s => s.id.includes("offline"));
-      const onlineSession = sessions.find(s => s.accessToken && s.isOnline);
-      const session = offlineSession || onlineSession || sessions.find(s => s.accessToken);
-
-      if (!session?.accessToken) {
-        const sessionInfo = sessions.map(s => `${s.id} (online=${s.isOnline}, scope=${s.scope || 'none'}, expires=${s.expires || 'never'})`).join(" | ");
-        return json({ error: `Store nie je pripojený. Sessions: ${sessions.length}. Info: ${sessionInfo}`, step: "lookup" });
+      if (sessions.length === 0) {
+        return json({ error: `Store nie je pripojený. Žiadne sessions v databáze pre ${shopDomain}.`, step: "lookup" });
       }
 
-      // Debug: Show which session we're using
-      const tokenPreview = session.accessToken.substring(0, 8) + "...";
-      const sessionDebug = `Session: ${session.id}, online=${session.isOnline}, scope=${session.scope || 'none'}, token=${tokenPreview}`;
+      // Show ALL sessions for debug
+      const allSessionsDebug = sessions.map(s =>
+        `[${s.id}] online=${s.isOnline} scope=${s.scope || 'none'} token=${s.accessToken ? s.accessToken.substring(0, 10) + '...' : 'NONE'} expires=${s.expires || 'never'}`
+      ).join(" || ");
 
-      // Use REST API for reliable order lookup
-      const cleanNumber = orderNumber.replace(/^#/, '');
+      // Try EVERY session token until one works
+      let workingSession: any = null;
+      let workingCount = 0;
+      const triedTokens: string[] = [];
 
-      // First try: fetch orders count to verify API access
-      const countUrl = `https://${shopDomain}/admin/api/2025-04/orders/count.json?status=any`;
-      const countResp = await fetch(countUrl, {
-        headers: { "X-Shopify-Access-Token": session.accessToken },
-      });
-      const countStatus = countResp.status;
-      let countData: any = {};
-      let countText = "";
-      try {
-        countText = await countResp.text();
-        countData = JSON.parse(countText);
-      } catch (e) {
-        countData = { raw: countText.substring(0, 200) };
+      for (const sess of sessions) {
+        if (!sess.accessToken) continue;
+        const tokenPreview = sess.accessToken.substring(0, 10) + "...";
+        try {
+          const testUrl = `https://${shopDomain}/admin/api/2025-04/orders/count.json?status=any`;
+          const testResp = await fetch(testUrl, {
+            headers: { "X-Shopify-Access-Token": sess.accessToken },
+          });
+          triedTokens.push(`${sess.id}=${testResp.status}`);
+          if (testResp.status === 200) {
+            const testData = await testResp.json();
+            workingSession = sess;
+            workingCount = testData.count || 0;
+            break;
+          }
+        } catch (e) {
+          triedTokens.push(`${sess.id}=error`);
+        }
       }
 
-      // If count returns error, token is bad
-      if (countStatus !== 200) {
+      if (!workingSession) {
         return json({
-          error: `API error (${countStatus}). ${sessionDebug}. Response: ${JSON.stringify(countData).substring(0, 300)}`,
+          error: `Žiadny token nefunguje! Sessions(${sessions.length}): ${allSessionsDebug}. Tried: ${triedTokens.join(", ")}`,
           step: "lookup"
         });
       }
 
-      const totalOrders = countData.count || 0;
+      const session = workingSession;
+      const totalOrders = workingCount;
+      const cleanNumber = orderNumber.replace(/^#/, '');
 
       const restUrl = `https://${shopDomain}/admin/api/2025-04/orders.json?name=${encodeURIComponent(cleanNumber)}&status=any&limit=1`;
 
@@ -161,7 +164,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         const debugData = await debugResp.json();
         const recentNames = (debugData.orders || []).map((o: any) => `${o.name}(${o.id})`).join(", ");
         return json({
-          error: `Objednávka nebola nájdená. Total orders in store: ${totalOrders}. Posledné: ${recentNames || "žiadne"}. ${sessionDebug}`,
+          error: `Objednávka nebola nájdená. Total orders: ${totalOrders}. Posledné: ${recentNames || "žiadne"}. Session: ${session.id}`,
           step: "lookup"
         });
       }
