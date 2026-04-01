@@ -119,10 +119,17 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         data = await response.json();
       }
 
-      const order = data.orders?.[0];
+      let order = data.orders?.[0];
 
       if (!order) {
-        return json({ error: `Objednávka nebola nájdená. Skontrolujte číslo objednávky. (Debug: shop=${shopDomain}, num=${cleanNumber})`, step: "lookup" });
+        // Debug: fetch last 3 orders to see name format
+        const debugUrl = `https://${shopDomain}/admin/api/2025-04/orders.json?status=any&limit=3`;
+        const debugResp = await fetch(debugUrl, {
+          headers: { "X-Shopify-Access-Token": session.accessToken },
+        });
+        const debugData = await debugResp.json();
+        const recentNames = (debugData.orders || []).map((o: any) => o.name).join(", ");
+        return json({ error: `Objednávka nebola nájdená. (Posledné objednávky: ${recentNames || "žiadne"})`, step: "lookup" });
       }
 
       // Verify email
