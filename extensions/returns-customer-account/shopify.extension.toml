@@ -1,19 +1,19 @@
-api_version = "2026-04"
+api_version = "2025-04"
 
 [[extensions]]
-name = "Returns - Menu Item"
-handle = "returns-menu-item"
+name = "Returns - Request Form"
+handle = "returns-request-form"
+uid = "dcac3620-09d6-7dad-6b72-330ee19e432903ac2149"
 type = "ui_extension"
 
 [[extensions.targeting]]
 module = "./src/MenuItemAction.tsx"
 target = "customer-account.order.action.menu-item.render"
 
-[[extensions]]
-name = "Returns - Request Form"
-handle = "returns-request-form"
-type = "ui_extension"
+[[extensions.targeting]]
+module = "./src/TestAction.tsx"
+target = "customer-account.order.action.render"
 
 [[extensions.targeting]]
-module = "./src/ReturnRequestPage.tsx"
-target = "customer-account.order.action.render"
+module = "./src/ReturnBlock.tsx"
+target = "customer-account.order-status.cart-line-list.render-after"

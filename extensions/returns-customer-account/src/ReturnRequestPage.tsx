@@ -1,9 +1,8 @@
 import {
   reactExtension,
-  CustomerAccountAction,
   useApi,
-  useOrder,
   useTranslate,
+  useOrder,
   BlockStack,
   InlineStack,
   Text,
@@ -12,11 +11,10 @@ import {
   TextField,
   Divider,
   Banner,
-  Checkbox,
   Heading,
   View,
-  Badge,
-  Image,
+  Checkbox,
+  CustomerAccountAction,
 } from "@shopify/ui-extensions-react/customer-account";
 import { useState, useEffect, useCallback } from "react";
 
