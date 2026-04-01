@@ -188,7 +188,34 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         return json({ error: "Pre túto objednávku už existuje žiadosť o vrátenie.", step: "lookup" });
       }
 
-      // Map line items
+      // Fetch product images for all line items
+      const productIds = [...new Set((order.line_items || []).map((item: any) => item.product_id).filter(Boolean))];
+      const productImages: Record<string, string> = {};
+
+      // Fetch images in batches (max 250 per request via REST)
+      if (productIds.length > 0) {
+        try {
+          const idsParam = productIds.join(",");
+          const productsUrl = `https://${shopDomain}/admin/api/2025-04/products.json?ids=${idsParam}&fields=id,image,images`;
+          const productsResp = await fetch(productsUrl, {
+            headers: { "X-Shopify-Access-Token": session.accessToken },
+          });
+          if (productsResp.ok) {
+            const productsData = await productsResp.json();
+            for (const product of (productsData.products || [])) {
+              if (product.image?.src) {
+                productImages[String(product.id)] = product.image.src;
+              } else if (product.images?.[0]?.src) {
+                productImages[String(product.id)] = product.images[0].src;
+              }
+            }
+          }
+        } catch (e) {
+          console.error("Failed to fetch product images:", e);
+        }
+      }
+
+      // Map line items with images
       const lineItems = (order.line_items || []).map((item: any) => ({
         id: String(item.id),
         title: item.title || "",
@@ -197,7 +224,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         quantity: item.quantity || 1,
         price: parseFloat(item.price || "0"),
         currency: order.currency || "EUR",
-        imageUrl: "",
+        imageUrl: productImages[String(item.product_id)] || "",
       }));
 
       return json({
@@ -227,6 +254,26 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     const notes = JSON.parse(formData.get("notes") as string || "{}");
     const customerNotes = formData.get("customerNotes") as string || "";
     const customerIban = formData.get("customerIban") as string || "";
+    const photoMapping = JSON.parse(formData.get("photoMapping") as string || "{}");
+
+    // Collect uploaded photos per item
+    const uploadedPhotos: Record<string, { fileName: string; data: string; mimeType: string; size: number }[]> = {};
+    for (const [itemId, fieldNames] of Object.entries(photoMapping) as [string, string[]][]) {
+      uploadedPhotos[itemId] = [];
+      for (const fieldName of fieldNames) {
+        const file = formData.get(fieldName);
+        if (file && file instanceof File && file.size > 0) {
+          const buffer = Buffer.from(await file.arrayBuffer());
+          const base64 = buffer.toString("base64");
+          uploadedPhotos[itemId].push({
+            fileName: file.name,
+            data: `data:${file.type};base64,${base64}`,
+            mimeType: file.type,
+            size: file.size,
+          });
+        }
+      }
+    }
 
     if (selectedItems.length === 0) {
       return json({ error: "Vyberte aspoň jeden produkt na vrátenie.", step: "form", order: orderData });
@@ -287,7 +334,24 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         },
       });
 
-      return json({ step: "success", error: null, returnId: returnRequest.id });
+      // Save uploaded photos
+      const allPhotos: { returnRequestId: string; fileName: string; fileUrl: string; fileSize: number; mimeType: string }[] = [];
+      for (const [itemId, photos] of Object.entries(uploadedPhotos)) {
+        for (const photo of photos) {
+          allPhotos.push({
+            returnRequestId: returnRequest.id,
+            fileName: photo.fileName,
+            fileUrl: photo.data, // base64 data URL
+            fileSize: photo.size,
+            mimeType: photo.mimeType,
+          });
+        }
+      }
+      if (allPhotos.length > 0) {
+        await prisma.returnPhoto.createMany({ data: allPhotos });
+      }
+
+      return json({ step: "success", error: null, returnId: returnRequest.id, photosUploaded: allPhotos.length });
     } catch (err: any) {
       console.error("Return create error:", err);
       return json({ error: "Chyba pri vytváraní žiadosti. Skúste znova.", step: "form", order: orderData });
@@ -306,6 +370,7 @@ export default function ReturnsPortal() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [itemReasons, setItemReasons] = useState<Record<string, string>>({});
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
+  const [itemPhotos, setItemPhotos] = useState<Record<string, { file: File; preview: string }[]>>({});
 
   if (loaderError) {
     return (
@@ -370,6 +435,17 @@ export default function ReturnsPortal() {
           .product-checkbox { margin-top: 4px; width: 20px; height: 20px; accent-color: ${brandColor}; }
           .item-details { margin-top: 10px; padding: 12px; background: #f9f9f9; border-radius: 8px; }
           .item-details select, .item-details textarea { margin-top: 6px; }
+          .photo-upload-area { margin-top: 8px; }
+          .photo-previews { display: flex; gap: 10px; flex-wrap: wrap; }
+          .photo-preview { position: relative; width: 80px; height: 80px; border-radius: 8px; overflow: hidden; border: 2px solid #e0e0e0; }
+          .photo-preview img { width: 100%; height: 100%; object-fit: cover; }
+          .photo-remove { position: absolute; top: 2px; right: 2px; width: 22px; height: 22px; border-radius: 50%; background: rgba(0,0,0,0.6); color: #fff; border: none; cursor: pointer; font-size: 14px; line-height: 1; display: flex; align-items: center; justify-content: center; }
+          .photo-remove:hover { background: rgba(200,0,0,0.8); }
+          .photo-add { width: 80px; height: 80px; border-radius: 8px; border: 2px dashed #ccc; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+          .photo-add:hover { border-color: ${brandColor}; background: #f5f0fa; }
+          .photo-add-icon { font-size: 24px; color: #999; line-height: 1; }
+          .photo-add:hover .photo-add-icon { color: ${brandColor}; }
+          .photo-add-text { font-size: 10px; color: #999; margin-top: 4px; }
           .steps { display: flex; justify-content: center; gap: 8px; margin-bottom: 20px; }
           .step { width: 10px; height: 10px; border-radius: 50%; background: #ddd; }
           .step.active { background: ${brandColor}; }
@@ -403,6 +479,8 @@ export default function ReturnsPortal() {
               setItemReasons={setItemReasons}
               itemNotes={itemNotes}
               setItemNotes={setItemNotes}
+              itemPhotos={itemPhotos}
+              setItemPhotos={setItemPhotos}
             />
           ) : (
             <>
@@ -441,7 +519,7 @@ export default function ReturnsPortal() {
   );
 }
 
-function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSelectedItems, itemReasons, setItemReasons, itemNotes, setItemNotes }: any) {
+function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSelectedItems, itemReasons, setItemReasons, itemNotes, setItemNotes, itemPhotos, setItemPhotos }: any) {
   const toggleItem = (itemId: string) => {
     setSelectedItems((prev: string[]) =>
       prev.includes(itemId) ? prev.filter((id: string) => id !== itemId) : [...prev, itemId]
@@ -456,12 +534,20 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
         <div className="step" />
       </div>
 
-      <Form method="post">
+      <Form method="post" encType="multipart/form-data">
         <input type="hidden" name="intent" value="submit" />
         <input type="hidden" name="orderData" value={JSON.stringify(order)} />
         <input type="hidden" name="selectedItems" value={JSON.stringify(selectedItems)} />
         <input type="hidden" name="reasons" value={JSON.stringify(itemReasons)} />
         <input type="hidden" name="notes" value={JSON.stringify(itemNotes)} />
+        <input type="hidden" name="photoMapping" value={JSON.stringify(
+          Object.fromEntries(
+            Object.entries(itemPhotos).map(([itemId, photos]: [string, any[]]) => [
+              itemId,
+              photos.map((_: any, idx: number) => `photo_${itemId}_${idx}`)
+            ])
+          )
+        )} />
 
         <div className="card">
           <h2 style={{ marginBottom: 4, fontSize: 20 }}>Objednávka {order.name}</h2>
@@ -525,6 +611,56 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
                     rows={2}
                     style={{ width: "100%", padding: 10, borderRadius: 6, border: "1px solid #ddd", fontSize: 14 }}
                   />
+
+                  <label style={{ fontSize: 13, fontWeight: 600, marginTop: 12, display: "block" }}>
+                    Fotky poškodenia (max 4):
+                  </label>
+                  <div className="photo-upload-area">
+                    <div className="photo-previews">
+                      {(itemPhotos[item.id] || []).map((photo: any, idx: number) => (
+                        <div key={idx} className="photo-preview">
+                          <img src={photo.preview} alt={`Foto ${idx + 1}`} />
+                          <button
+                            type="button"
+                            className="photo-remove"
+                            onClick={() => {
+                              URL.revokeObjectURL(photo.preview);
+                              setItemPhotos((prev: any) => ({
+                                ...prev,
+                                [item.id]: (prev[item.id] || []).filter((_: any, i: number) => i !== idx),
+                              }));
+                            }}
+                          >×</button>
+                        </div>
+                      ))}
+                      {(itemPhotos[item.id] || []).length < 4 && (
+                        <label className="photo-add">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            multiple
+                            style={{ display: "none" }}
+                            onChange={(e) => {
+                              const files = Array.from(e.target.files || []);
+                              const currentPhotos = itemPhotos[item.id] || [];
+                              const remaining = 4 - currentPhotos.length;
+                              const newPhotos = files.slice(0, remaining).map(file => ({
+                                file,
+                                preview: URL.createObjectURL(file),
+                              }));
+                              setItemPhotos((prev: any) => ({
+                                ...prev,
+                                [item.id]: [...currentPhotos, ...newPhotos],
+                              }));
+                              e.target.value = "";
+                            }}
+                          />
+                          <span className="photo-add-icon">+</span>
+                          <span className="photo-add-text">Pridať foto</span>
+                        </label>
+                      )}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -539,6 +675,24 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
           <div className="form-group">
             <label>Poznámka (voliteľné)</label>
             <textarea name="customerNotes" rows={3} placeholder="Doplňujúce informácie..." />
+          </div>
+
+          {/* Hidden file inputs for photo uploads */}
+          <div style={{ display: "none" }}>
+            {Object.entries(itemPhotos).map(([itemId, photos]: [string, any[]]) =>
+              photos.map((photo: any, idx: number) => {
+                const dt = new DataTransfer();
+                dt.items.add(photo.file);
+                return (
+                  <input
+                    key={`photo_${itemId}_${idx}`}
+                    type="file"
+                    name={`photo_${itemId}_${idx}`}
+                    ref={(el) => { if (el) el.files = dt.files; }}
+                  />
+                );
+              })
+            )}
           </div>
 
           <button type="submit" className="btn btn-primary" disabled={isSubmitting || selectedItems.length === 0}>
