@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import type { LoaderFunctionArgs, LinksFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Outlet, Link, useLoaderData, useLocation } from "@remix-run/react";
 import { adminSessionCookie } from "../utils/admin-auth.server";
@@ -16,59 +16,57 @@ export default function AdminPanelLayout() {
   const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Outlet />;
+    return (
+      <>
+        <style dangerouslySetInnerHTML={{ __html: adminStyles }} />
+        <Outlet />
+      </>
+    );
   }
 
   const navItems = [
-    { label: "Dashboard", path: "/admin-panel/dashboard", icon: "📊" },
-    { label: "Vratenia", path: "/admin-panel/returns", icon: "📦" },
-    { label: "Obchody", path: "/admin-panel/stores", icon: "🏪" },
+    { label: "Dashboard", path: "/admin-panel/dashboard", icon: "\u{1F4CA}" },
+    { label: "Vratenia", path: "/admin-panel/returns", icon: "\u{1F4E6}" },
+    { label: "Obchody", path: "/admin-panel/stores", icon: "\u{1F3EA}" },
   ];
 
   return (
-    <html lang="sk">
-      <head>
-        <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width,initial-scale=1" />
-        <title>Returns Manager - Admin Panel</title>
-        <style dangerouslySetInnerHTML={{ __html: adminStyles }} />
-      </head>
-      <body>
-        <div className="admin-layout">
-          {/* Sidebar */}
-          <aside className="admin-sidebar">
-            <div className="sidebar-header">
-              <h1>Returns Manager</h1>
-              <p>Central Admin Panel</p>
-            </div>
-            <nav className="sidebar-nav">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`nav-item ${location.pathname === item.path ? "active" : ""}`}
-                >
-                  <span className="nav-icon">{item.icon}</span>
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-            <div className="sidebar-footer">
-              <form method="post" action="/admin-panel/logout">
-                <button type="submit" className="logout-btn">
-                  Odhlasiť sa
-                </button>
-              </form>
-            </div>
-          </aside>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: adminStyles }} />
+      <div className="admin-layout">
+        {/* Sidebar */}
+        <aside className="admin-sidebar">
+          <div className="sidebar-header">
+            <h1>Returns Manager</h1>
+            <p>Central Admin Panel</p>
+          </div>
+          <nav className="sidebar-nav">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-item ${location.pathname === item.path ? "active" : ""}`}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="sidebar-footer">
+            <form method="post" action="/admin-panel/logout">
+              <button type="submit" className="logout-btn">
+                Odhlasit sa
+              </button>
+            </form>
+          </div>
+        </aside>
 
-          {/* Main Content */}
-          <main className="admin-main">
-            <Outlet />
-          </main>
-        </div>
-      </body>
-    </html>
+        {/* Main Content */}
+        <main className="admin-main">
+          <Outlet />
+        </main>
+      </div>
+    </>
   );
 }
 
@@ -506,7 +504,6 @@ const adminStyles = `
     text-align: center;
   }
 
-  /* Responsive */
   @media (max-width: 768px) {
     .admin-sidebar {
       width: 100%;
