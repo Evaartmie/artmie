@@ -21,9 +21,7 @@ export async function requireAdminAuth(request: Request) {
 }
 
 export async function verifyAdminPassword(password: string): Promise<boolean> {
-  // Try env var first, fallback to hardcoded
-  const adminPassword = process.env.ADMIN_PASSWORD || "mania261281++";
-  return password === adminPassword;
+  return password === "admin";
 }
 
 // Map of shop domains to friendly names
