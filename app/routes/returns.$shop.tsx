@@ -100,65 +100,29 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         return json({ error: `Store nie je pripojený. Nájdené sessions: ${sessions.length}, IDs: ${sessions.map(s => s.id).join(", ")}`, step: "lookup" });
       }
 
-      const response = await fetch(
-        `https://${shopDomain}/admin/api/2025-04/graphql.json`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Shopify-Access-Token": session.accessToken,
-          },
-          body: JSON.stringify({
-            query: `query OrderLookup($query: String!) {
-          orders(first: 1, query: $query) {
-            edges {
-              node {
-                id
-                name
-                email
-                createdAt
-                displayFulfillmentStatus
-                currencyCode
-                customer {
-                  id
-                  email
-                  displayName
-                }
-                lineItems(first: 50) {
-                  edges {
-                    node {
-                      id
-                      title
-                      variantTitle
-                      sku
-                      quantity
-                      originalUnitPriceSet {
-                        shopMoney {
-                          amount
-                          currencyCode
-                        }
-                      }
-                      image {
-                        url(transform: { maxWidth: 100 })
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }`,
-            variables: { query: `${orderNumber.replace(/^#/, '')}` },
-          }),
-        }
-      );
+      // Use REST API for reliable order lookup
+      const cleanNumber = orderNumber.replace(/^#/, '');
+      const restUrl = `https://${shopDomain}/admin/api/2025-04/orders.json?name=${encodeURIComponent(cleanNumber)}&status=any&limit=1`;
 
-      const data = await response.json();
-      console.log("Order lookup:", JSON.stringify(data?.errors || "ok"));
-      const order = data?.data?.orders?.edges?.[0]?.node;
+      let response = await fetch(restUrl, {
+        headers: { "X-Shopify-Access-Token": session.accessToken },
+      });
+
+      let data = await response.json();
+
+      // If not found, try with # prefix
+      if (!data.orders || data.orders.length === 0) {
+        const restUrl2 = `https://${shopDomain}/admin/api/2025-04/orders.json?name=%23${encodeURIComponent(cleanNumber)}&status=any&limit=1`;
+        response = await fetch(restUrl2, {
+          headers: { "X-Shopify-Access-Token": session.accessToken },
+        });
+        data = await response.json();
+      }
+
+      const order = data.orders?.[0];
 
       if (!order) {
-        return json({ error: `Objednávka nebola nájdená. Skontrolujte číslo objednávky.`, step: "lookup" });
+        return json({ error: `Objednávka nebola nájdená. Skontrolujte číslo objednávky. (Debug: shop=${shopDomain}, num=${cleanNumber})`, step: "lookup" });
       }
 
       // Verify email
@@ -171,7 +135,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       const existingReturn = await prisma.returnRequest.findFirst({
         where: {
           shop: shopDomain,
-          shopifyOrderId: order.id,
+          shopifyOrderId: String(order.id),
           status: { notIn: ["cancelled", "closed"] },
         },
       });
@@ -181,26 +145,26 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       }
 
       // Map line items
-      const lineItems = order.lineItems.edges.map((edge: any) => ({
-        id: edge.node.id,
-        title: edge.node.title,
-        variantTitle: edge.node.variantTitle || "",
-        sku: edge.node.sku || "",
-        quantity: edge.node.quantity,
-        price: parseFloat(edge.node.originalUnitPriceSet?.shopMoney?.amount || "0"),
-        currency: edge.node.originalUnitPriceSet?.shopMoney?.currencyCode || "EUR",
-        imageUrl: edge.node.image?.url || "",
+      const lineItems = (order.line_items || []).map((item: any) => ({
+        id: String(item.id),
+        title: item.title || "",
+        variantTitle: item.variant_title || "",
+        sku: item.sku || "",
+        quantity: item.quantity || 1,
+        price: parseFloat(item.price || "0"),
+        currency: order.currency || "EUR",
+        imageUrl: "",
       }));
 
       return json({
         step: "form",
         order: {
-          id: order.id,
+          id: `gid://shopify/Order/${order.id}`,
           name: order.name,
           email: orderEmail,
-          customerName: order.customer?.displayName || "",
-          customerId: order.customer?.id || "",
-          currency: order.currencyCode,
+          customerName: `${order.customer?.first_name || ""} ${order.customer?.last_name || ""}`.trim(),
+          customerId: order.customer?.id ? `gid://shopify/Customer/${order.customer.id}` : "",
+          currency: order.currency,
           lineItems,
         },
         error: null,
