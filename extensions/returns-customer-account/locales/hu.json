@@ -1,0 +1,30 @@
+{
+  "menuItem": {
+    "label": "Visszakuldes kerese"
+  },
+  "returnForm": {
+    "title": "Visszakuldes kerese",
+    "selectItems": "Valassza ki a visszakuldenco termekeket",
+    "noEligibleItems": "Ehhez a rendeleshez nem talalhato jogosult termek.",
+    "quantityLabel": "Visszakuldenco mennyiseg",
+    "reasonLabel": "Visszakuldes oka",
+    "selectReason": "Valasszon okot...",
+    "detailsRequired": "Reszletek (kotelezo)",
+    "detailsOptional": "Tovabbi reszletek (opcionalis)",
+    "customerNotes": "Megjegyzes az uzletnek (opcionalis)",
+    "submit": "Visszakuldes kuldese",
+    "submitting": "Kuldes...",
+    "errorSelectItem": "Kerjuk, valasszon legalabb egy termeketv a visszakuldeshez.",
+    "errorSelectReason": "Kerjuk, valasszon visszakuldes okot minden termekhez."
+  },
+  "success": {
+    "title": "Visszakuldes elkuldve",
+    "message": "A visszakuldes kerelme sikeresen elkuldve. Atnezetjuk es hamarosan visszajelzunk.",
+    "checkStatus": "A visszakuldes allapotat a rendelesi elozmenyekben kovetheti nyomon."
+  },
+  "error": {
+    "generic": "Valami hiba tortent. Kerjuk, probalkozzon ujra.",
+    "windowExpired": "A visszakuldes hatarido lejaart.",
+    "existingReturn": "Ehhez a rendeleshez mar letezik visszakuldes kerelem."
+  }
+}

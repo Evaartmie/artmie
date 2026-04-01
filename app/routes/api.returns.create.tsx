@@ -14,6 +14,8 @@ const CreateReturnSchema = z.object({
   customerName: z.string(),
   currency: z.string().default("EUR"),
   customerNotes: z.string().optional(),
+  customerIban: z.string().optional(),
+  totalRefundAmount: z.number().optional(),
   lineItems: z.array(
     z.object({
       lineItemId: z.string(),
@@ -98,6 +100,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         customerName: data.customerName,
         currency: data.currency,
         customerNotes: data.customerNotes,
+        customerIban: data.customerIban,
         status: initialStatus,
         totalRefundAmount: totalValue,
         approvedAt:

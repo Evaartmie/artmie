@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Zloz zwrot"
+  },
+  "returnForm": {
+    "title": "Wniosek o zwrot",
+    "selectItems": "Wybierz produkty do zwrotu",
+    "noEligibleItems": "Nie znaleziono produktow kwalifikujacych sie do zwrotu.",
+    "quantityLabel": "Ilosc do zwrotu",
+    "reasonLabel": "Powod zwrotu",
+    "selectReason": "Wybierz powod...",
+    "detailsRequired": "Szczegoly (wymagane)",
+    "detailsOptional": "Dodatkowe szczegoly (opcjonalne)",
+    "customerNotes": "Uwagi dla sklepu (opcjonalne)",
+    "submit": "Wyslij wniosek o zwrot",
+    "submitting": "Wysylanie...",
+    "errorSelectItem": "Prosze wybrac co najmniej jeden produkt do zwrotu.",
+    "errorSelectReason": "Prosze wybrac powod zwrotu dla wszystkich produktow."
+  },
+  "returnStatus": {
+    "title": "Status zwrotu",
+    "pending": "Oczekuje na weryfikacje",
+    "approved": "Zatwierdzony",
+    "rejected": "Odrzucony",
+    "inTransit": "W transporcie",
+    "received": "Otrzymany",
+    "refunded": "Zwrocono pieniadze",
+    "closed": "Zamkniety",
+    "cancelled": "Anulowany",
+    "items": "Produkty",
+    "timeline": "Historia",
+    "tracking": "Sledzenie",
+    "carrier": "Przewoznik",
+    "requested": "Zlozono",
+    "cancel": "Anuluj zwrot"
+  },
+  "success": {
+    "title": "Wniosek o zwrot wyslany",
+    "message": "Twoj wniosek o zwrot zostal pomyslnie wyslany. Sprawdzimy go i wkrotce sie z Toba skontaktujemy.",
+    "checkStatus": "Status zwrotu mozesz sledzic w historii zamowien."
+  },
+  "error": {
+    "generic": "Cos poszlo nie tak. Sprobuj ponownie.",
+    "windowExpired": "Termin zwrotu dla tego zamowienia wypraszal.",
+    "existingReturn": "Wniosek o zwrot dla tego zamowienia juz istnieje."
+  }
+}

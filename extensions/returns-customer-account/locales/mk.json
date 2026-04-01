@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Baranje za vrakjanje"
+  },
+  "returnForm": {
+    "title": "Baranje za vrakjanje na proizvodot",
+    "selectItems": "Izberete proizvodi za vrakjanje",
+    "noEligibleItems": "Nema proizvodi shto ispunuvaat uslovi za vrakjanje.",
+    "quantityLabel": "Kolichestvo za vrakjanje",
+    "reasonLabel": "Prichina za vrakjanje",
+    "selectReason": "Izberete prichina...",
+    "detailsRequired": "Detali (zadolzhitelno)",
+    "detailsOptional": "Dopolnitelni detali (opcionalno)",
+    "customerNotes": "Belezhki za prodavnicata (opcionalno)",
+    "submit": "Isprati baranje za vrakjanje",
+    "submitting": "Se isprakja...",
+    "errorSelectItem": "Ve molime izberete barem eden proizvod za vrakjanje.",
+    "errorSelectReason": "Ve molime izberete prichina za vrakjanje za site proizvodi."
+  },
+  "returnStatus": {
+    "title": "Status na vrakjanjeto",
+    "pending": "Cheka pregled",
+    "approved": "Odobreno",
+    "rejected": "Odbieno",
+    "inTransit": "Vo transport",
+    "received": "Primeno",
+    "refunded": "Vrateni pari",
+    "closed": "Zatvoreno",
+    "cancelled": "Otkazhano",
+    "items": "Proizvodi",
+    "timeline": "Istorija",
+    "tracking": "Sledenje",
+    "carrier": "Kurir",
+    "requested": "Pobarano",
+    "cancel": "Otkzhi vrakjanje"
+  },
+  "success": {
+    "title": "Baranjeto za vrakjanje e isprateno",
+    "message": "Vasheto baranje za vrakjanje beshe uspeshno isprateno. Kje go razgledame i kje ve kontaktirame nabrzo.",
+    "checkStatus": "Statusot na vrakjanjeto mozhete da go sledite vo istorijata na narachki."
+  },
+  "error": {
+    "generic": "Neshto trgna naopaku. Ve molime obidete se povtorno.",
+    "windowExpired": "Rokot za vrakjanje na ovaa narachka istekol.",
+    "existingReturn": "Baranje za vrakjanje vekje postoi za ovaa narachka."
+  }
+}

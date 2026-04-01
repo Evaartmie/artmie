@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Poziadat o vratenie"
+  },
+  "returnForm": {
+    "title": "Poziadanie o vratenie tovaru",
+    "selectItems": "Vyberte polozky na vratenie",
+    "noEligibleItems": "Pre tuto objednavku neboli najdene ziadne opravnene polozky.",
+    "quantityLabel": "Mnozstvo na vratenie",
+    "reasonLabel": "Dovod vratenia",
+    "selectReason": "Vyberte dovod...",
+    "detailsRequired": "Podrobnosti (povinne)",
+    "detailsOptional": "Dalsie podrobnosti (volitelne)",
+    "customerNotes": "Poznamky pre obchod (volitelne)",
+    "submit": "Odoslat ziadost o vratenie",
+    "submitting": "Odosielam...",
+    "errorSelectItem": "Prosim, vyberte aspon jednu polozku na vratenie.",
+    "errorSelectReason": "Prosim, vyberte dovod vratenia pre vsetky polozky."
+  },
+  "returnStatus": {
+    "title": "Stav vratenia",
+    "pending": "Caka na kontrolu",
+    "approved": "Schvalene",
+    "rejected": "Zamietnute",
+    "inTransit": "Na ceste",
+    "received": "Prijate",
+    "refunded": "Vratene peniaze",
+    "closed": "Uzavrete",
+    "cancelled": "Zrusene",
+    "items": "Polozky",
+    "timeline": "Priebeh",
+    "tracking": "Sledovanie zasielky",
+    "carrier": "Prepravca",
+    "requested": "Poziadane",
+    "cancel": "Zrusit vratenie"
+  },
+  "success": {
+    "title": "Ziadost o vratenie odoslana",
+    "message": "Vasa ziadost o vratenie bola uspesne odoslana. Skontrolujeme ju a coskoro sa vam ozveme.",
+    "checkStatus": "Stav vratenia mozete sledovat v historii objednavok."
+  },
+  "error": {
+    "generic": "Nieco sa pokazilo. Skuste to prosim znova.",
+    "windowExpired": "Lehota na vratenie tejto objednavky vyprala.",
+    "existingReturn": "Pre tuto objednavku uz existuje ziadost o vratenie."
+  }
+}

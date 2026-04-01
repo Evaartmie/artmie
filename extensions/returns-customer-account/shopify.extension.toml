@@ -1,0 +1,19 @@
+api_version = "2026-04"
+
+[[extensions]]
+name = "Returns - Menu Item"
+handle = "returns-menu-item"
+type = "ui_extension"
+
+[[extensions.targeting]]
+module = "./src/MenuItemAction.tsx"
+target = "customer-account.order.action.menu-item.render"
+
+[[extensions]]
+name = "Returns - Request Form"
+handle = "returns-request-form"
+type = "ui_extension"
+
+[[extensions.targeting]]
+module = "./src/ReturnRequestPage.tsx"
+target = "customer-account.order.action.render"

@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Zahtev za povracaj"
+  },
+  "returnForm": {
+    "title": "Zahtev za povracaj robe",
+    "selectItems": "Izaberite proizvode za povracaj",
+    "noEligibleItems": "Nema proizvoda koji ispunjavaju uslove za povracaj.",
+    "quantityLabel": "Kolicina za povracaj",
+    "reasonLabel": "Razlog povracaja",
+    "selectReason": "Izaberite razlog...",
+    "detailsRequired": "Detalji (obavezno)",
+    "detailsOptional": "Dodatni detalji (opciono)",
+    "customerNotes": "Napomena za prodavnicu (opciono)",
+    "submit": "Posalji zahtev za povracaj",
+    "submitting": "Slanje...",
+    "errorSelectItem": "Molimo izaberite bar jedan proizvod za povracaj.",
+    "errorSelectReason": "Molimo izaberite razlog povracaja za sve proizvode."
+  },
+  "returnStatus": {
+    "title": "Status povracaja",
+    "pending": "Ceka na pregled",
+    "approved": "Odobreno",
+    "rejected": "Odbijeno",
+    "inTransit": "U transportu",
+    "received": "Primljeno",
+    "refunded": "Vracen novac",
+    "closed": "Zatvoreno",
+    "cancelled": "Otkazano",
+    "items": "Proizvodi",
+    "timeline": "Istorija",
+    "tracking": "Pracenje",
+    "carrier": "Kurir",
+    "requested": "Zatrazeno",
+    "cancel": "Otkazi povracaj"
+  },
+  "success": {
+    "title": "Zahtev za povracaj poslat",
+    "message": "Vas zahtev za povracaj je uspesno poslat. Pregledacemo ga i javicemo vam u najkracem roku.",
+    "checkStatus": "Status povracaja mozete pratiti u istoriji narudzbina."
+  },
+  "error": {
+    "generic": "Nesto je poslo po zlu. Molimo pokusajte ponovo.",
+    "windowExpired": "Rok za povracaj ove narudzbine je istekao.",
+    "existingReturn": "Zahtev za povracaj vec postoji za ovu narudzbinu."
+  }
+}

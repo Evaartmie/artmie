@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Zahtjev za povrat"
+  },
+  "returnForm": {
+    "title": "Zahtjev za povrat robe",
+    "selectItems": "Odaberite proizvode za povrat",
+    "noEligibleItems": "Nema proizvoda koji ispunjavaju uslove za povrat.",
+    "quantityLabel": "Kolicina za povrat",
+    "reasonLabel": "Razlog povrata",
+    "selectReason": "Odaberite razlog...",
+    "detailsRequired": "Detalji (obavezno)",
+    "detailsOptional": "Dodatni detalji (opcionalno)",
+    "customerNotes": "Napomena za trgovinu (opcionalno)",
+    "submit": "Posalji zahtjev za povrat",
+    "submitting": "Slanje...",
+    "errorSelectItem": "Molimo odaberite bar jedan proizvod za povrat.",
+    "errorSelectReason": "Molimo odaberite razlog povrata za sve proizvode."
+  },
+  "returnStatus": {
+    "title": "Status povrata",
+    "pending": "Ceka na pregled",
+    "approved": "Odobreno",
+    "rejected": "Odbijeno",
+    "inTransit": "U transportu",
+    "received": "Primljeno",
+    "refunded": "Vracen novac",
+    "closed": "Zatvoreno",
+    "cancelled": "Otkazano",
+    "items": "Proizvodi",
+    "timeline": "Historija",
+    "tracking": "Pracenje",
+    "carrier": "Kurir",
+    "requested": "Zatrazeno",
+    "cancel": "Otkazi povrat"
+  },
+  "success": {
+    "title": "Zahtjev za povrat poslat",
+    "message": "Vas zahtjev za povrat je uspjesno poslat. Pregledacemo ga i javicemo vam u najkracem roku.",
+    "checkStatus": "Status povrata mozete pratiti u historiji narudzbi."
+  },
+  "error": {
+    "generic": "Nesto nije u redu. Molimo pokusajte ponovo.",
+    "windowExpired": "Rok za povrat ove narudzbe je istekao.",
+    "existingReturn": "Zahtjev za povrat vec postoji za ovu narudzbu."
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Richiedi un reso"
+  },
+  "returnForm": {
+    "title": "Richiesta di reso",
+    "selectItems": "Seleziona gli articoli da restituire",
+    "noEligibleItems": "Nessun articolo idoneo trovato per questo ordine.",
+    "quantityLabel": "Quantita da restituire",
+    "reasonLabel": "Motivo del reso",
+    "selectReason": "Seleziona un motivo...",
+    "detailsRequired": "Dettagli (obbligatorio)",
+    "detailsOptional": "Dettagli aggiuntivi (facoltativo)",
+    "customerNotes": "Note per il negozio (facoltativo)",
+    "submit": "Invia richiesta di reso",
+    "submitting": "Invio in corso...",
+    "errorSelectItem": "Seleziona almeno un articolo da restituire.",
+    "errorSelectReason": "Seleziona un motivo di reso per tutti gli articoli."
+  },
+  "returnStatus": {
+    "title": "Stato del reso",
+    "pending": "In attesa di revisione",
+    "approved": "Approvato",
+    "rejected": "Rifiutato",
+    "inTransit": "In transito",
+    "received": "Ricevuto",
+    "refunded": "Rimborsato",
+    "closed": "Chiuso",
+    "cancelled": "Annullato",
+    "items": "Articoli",
+    "timeline": "Cronologia",
+    "tracking": "Tracciamento",
+    "carrier": "Corriere",
+    "requested": "Richiesto",
+    "cancel": "Annulla reso"
+  },
+  "success": {
+    "title": "Richiesta di reso inviata",
+    "message": "La tua richiesta di reso e stata inviata con successo. La esamineremo e ti contatteremo a breve.",
+    "checkStatus": "Puoi verificare lo stato del reso nella cronologia degli ordini."
+  },
+  "error": {
+    "generic": "Qualcosa e andato storto. Riprova.",
+    "windowExpired": "Il termine per il reso di questo ordine e scaduto.",
+    "existingReturn": "Una richiesta di reso esiste gia per questo ordine."
+  }
+}

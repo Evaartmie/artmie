@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Zajavka za vrashtane"
+  },
+  "returnForm": {
+    "title": "Zajavka za vrashtane na stoka",
+    "selectItems": "Izberete produkti za vrashtane",
+    "noEligibleItems": "Ne sa namereni produkti za vrashtane za tazi porachka.",
+    "quantityLabel": "Kolichestvo za vrashtane",
+    "reasonLabel": "Prichina za vrashtane",
+    "selectReason": "Izberete prichina...",
+    "detailsRequired": "Podrobnosti (zadlzhitelno)",
+    "detailsOptional": "Dopalnitelni podrobnosti (po zhelanie)",
+    "customerNotes": "Belezhki za magazina (po zhelanie)",
+    "submit": "Izprati zajavka za vrashtane",
+    "submitting": "Izprashta se...",
+    "errorSelectItem": "Molja, izberete pone edin produkt za vrashtane.",
+    "errorSelectReason": "Molja, izberete prichina za vrashtane za vsichki produkti."
+  },
+  "returnStatus": {
+    "title": "Status na vrashtaneto",
+    "pending": "Chakashtse pregled",
+    "approved": "Odobreno",
+    "rejected": "Otkazano",
+    "inTransit": "V transit",
+    "received": "Polucheno",
+    "refunded": "Vazstanoveno",
+    "closed": "Zatvoreno",
+    "cancelled": "Otmeneno",
+    "items": "Produkti",
+    "timeline": "Istorija",
+    "tracking": "Sledene",
+    "carrier": "Kurier",
+    "requested": "Podadeno",
+    "cancel": "Otmeni vrashtaneto"
+  },
+  "success": {
+    "title": "Zajavkata za vrashtane e izpratena",
+    "message": "Vashata zajavka za vrashtane beshe uspeshno izpratena. Shte ja razgledame i shte se svurzheme s vas v nay-kratki srokove.",
+    "checkStatus": "Mozhete da sledite statusa na vrashtaneto v istorijata na porachkite."
+  },
+  "error": {
+    "generic": "Neshto se obarka. Molja, opaytayte otnovo.",
+    "windowExpired": "Srokut za vrashtane na tazi porachka e iztekal.",
+    "existingReturn": "Za tazi porachka veche sashtestvuva zajavka za vrashtane."
+  }
+}

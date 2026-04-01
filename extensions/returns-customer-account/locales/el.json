@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Aitisi epistrofis"
+  },
+  "returnForm": {
+    "title": "Aitisi epistrofis proiontos",
+    "selectItems": "Epilexte proionta gia epistrofi",
+    "noEligibleItems": "Den vrethikan proionta pou pliroun tis proipotheseis gia epistrofi.",
+    "quantityLabel": "Posotita gia epistrofi",
+    "reasonLabel": "Logos epistrofis",
+    "selectReason": "Epilexte logo...",
+    "detailsRequired": "Leptomereies (apaitountai)",
+    "detailsOptional": "Epipleon leptomereies (proairetika)",
+    "customerNotes": "Simeiosis gia to katastima (proairetika)",
+    "submit": "Apostoli aitisis epistrofis",
+    "submitting": "Apostoli...",
+    "errorSelectItem": "Parakalou epilexte toulachiston ena proion gia epistrofi.",
+    "errorSelectReason": "Parakalou epilexte logo epistrofis gia ola ta proionta."
+  },
+  "returnStatus": {
+    "title": "Katastasi epistrofis",
+    "pending": "Anamoni elegchou",
+    "approved": "Egkrithi",
+    "rejected": "Aporrifthi",
+    "inTransit": "Se metafora",
+    "received": "Paralifthi",
+    "refunded": "Epistrofi chrimaton",
+    "closed": "Kleisto",
+    "cancelled": "Akirothike",
+    "items": "Proionta",
+    "timeline": "Istoriko",
+    "tracking": "Parakolouthisi",
+    "carrier": "Metaforeas",
+    "requested": "Aitithike",
+    "cancel": "Akirosi epistrofis"
+  },
+  "success": {
+    "title": "I aitisi epistrofis stalthike",
+    "message": "I aitisi epistrofis sas stalthike me epitichia. Tha tin elegxoume kai tha epikoinonisou me mazi sas sintoma.",
+    "checkStatus": "Mporite na parakolouthisete tin katastasi tis epistrofis sas sto istoriko paraggelion."
+  },
+  "error": {
+    "generic": "Kati pige strava. Parakalou prospathiste xana.",
+    "windowExpired": "I prothesmia epistrofis gia afti tin paraggelia echei lixei.",
+    "existingReturn": "Iparchi idi aitisi epistrofis gia afti tin paraggelia."
+  }
+}

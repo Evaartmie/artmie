@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Solicita returnare"
+  },
+  "returnForm": {
+    "title": "Cerere de returnare",
+    "selectItems": "Selectati produsele pentru returnare",
+    "noEligibleItems": "Nu au fost gasite produse eligibile pentru aceasta comanda.",
+    "quantityLabel": "Cantitate de returnat",
+    "reasonLabel": "Motivul returnarii",
+    "selectReason": "Selectati un motiv...",
+    "detailsRequired": "Detalii (obligatoriu)",
+    "detailsOptional": "Detalii suplimentare (optional)",
+    "customerNotes": "Note pentru magazin (optional)",
+    "submit": "Trimite cererea de returnare",
+    "submitting": "Se trimite...",
+    "errorSelectItem": "Va rugam selectati cel putin un produs pentru returnare.",
+    "errorSelectReason": "Va rugam selectati motivul returnarii pentru toate produsele."
+  },
+  "returnStatus": {
+    "title": "Starea returnarii",
+    "pending": "In asteptare",
+    "approved": "Aprobata",
+    "rejected": "Respinsa",
+    "inTransit": "In tranzit",
+    "received": "Primita",
+    "refunded": "Rambursata",
+    "closed": "Inchisa",
+    "cancelled": "Anulata",
+    "items": "Produse",
+    "timeline": "Istoric",
+    "tracking": "Urmarire",
+    "carrier": "Curier",
+    "requested": "Solicitata",
+    "cancel": "Anuleaza returnarea"
+  },
+  "success": {
+    "title": "Cerere de returnare trimisa",
+    "message": "Cererea dumneavoastra de returnare a fost trimisa cu succes. O vom verifica si va vom contacta in curand.",
+    "checkStatus": "Puteti urmari starea returnarii in istoricul comenzilor."
+  },
+  "error": {
+    "generic": "Ceva nu a mers bine. Va rugam incercati din nou.",
+    "windowExpired": "Termenul de returnare pentru aceasta comanda a expirat.",
+    "existingReturn": "O cerere de returnare exista deja pentru aceasta comanda."
+  }
+}

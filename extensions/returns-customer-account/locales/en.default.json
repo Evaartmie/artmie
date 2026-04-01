@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Request a Return"
+  },
+  "returnForm": {
+    "title": "Request a Return",
+    "selectItems": "Select items to return",
+    "noEligibleItems": "No eligible items found for this order.",
+    "quantityLabel": "Quantity to return",
+    "reasonLabel": "Reason for return",
+    "selectReason": "Select a reason...",
+    "detailsRequired": "Details (required)",
+    "detailsOptional": "Additional details (optional)",
+    "customerNotes": "Notes for the store (optional)",
+    "submit": "Submit Return Request",
+    "submitting": "Submitting...",
+    "errorSelectItem": "Please select at least one item to return.",
+    "errorSelectReason": "Please select a return reason for all items."
+  },
+  "returnStatus": {
+    "title": "Return Status",
+    "pending": "Pending Review",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "inTransit": "In Transit",
+    "received": "Received",
+    "refunded": "Refunded",
+    "closed": "Closed",
+    "cancelled": "Cancelled",
+    "items": "Items",
+    "timeline": "Timeline",
+    "tracking": "Tracking",
+    "carrier": "Carrier",
+    "requested": "Requested",
+    "cancel": "Cancel Return"
+  },
+  "success": {
+    "title": "Return Request Submitted",
+    "message": "Your return request has been submitted successfully. We will review it and get back to you shortly.",
+    "checkStatus": "You can check the status of your return in your order history."
+  },
+  "error": {
+    "generic": "Something went wrong. Please try again.",
+    "windowExpired": "The return window for this order has expired.",
+    "existingReturn": "A return request already exists for this order."
+  }
+}

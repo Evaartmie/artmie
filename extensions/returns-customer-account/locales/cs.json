@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Pozadat o vraceni"
+  },
+  "returnForm": {
+    "title": "Pozadavek na vraceni zbozi",
+    "selectItems": "Vyberte polozky k vraceni",
+    "noEligibleItems": "Pro tuto objednavku nebyly nalezeny zadne opravnene polozky.",
+    "quantityLabel": "Mnozstvi k vraceni",
+    "reasonLabel": "Duvod vraceni",
+    "selectReason": "Vyberte duvod...",
+    "detailsRequired": "Podrobnosti (povinne)",
+    "detailsOptional": "Dalsi podrobnosti (volitelne)",
+    "customerNotes": "Poznamky pro obchod (volitelne)",
+    "submit": "Odeslat zadost o vraceni",
+    "submitting": "Odesilam...",
+    "errorSelectItem": "Prosim, vyberte alespon jednu polozku k vraceni.",
+    "errorSelectReason": "Prosim, vyberte duvod vraceni pro vsechny polozky."
+  },
+  "returnStatus": {
+    "title": "Stav vraceni",
+    "pending": "Ceka na kontrolu",
+    "approved": "Schvaleno",
+    "rejected": "Zamitnuto",
+    "inTransit": "Na ceste",
+    "received": "Prijato",
+    "refunded": "Penize vraceny",
+    "closed": "Uzavreno",
+    "cancelled": "Zruseno",
+    "items": "Polozky",
+    "timeline": "Prubeh",
+    "tracking": "Sledovani zasilky",
+    "carrier": "Prepravce",
+    "requested": "Pozadano",
+    "cancel": "Zrusit vraceni"
+  },
+  "success": {
+    "title": "Zadost o vraceni odeslana",
+    "message": "Vase zadost o vraceni byla uspesne odeslana. Zkontrolujeme ji a brzy se vam ozveme.",
+    "checkStatus": "Stav vraceni muzete sledovat v historii objednavek."
+  },
+  "error": {
+    "generic": "Neco se pokazilo. Zkuste to prosim znovu.",
+    "windowExpired": "Lhuta pro vraceni teto objednavky vyprsela.",
+    "existingReturn": "Pro tuto objednavku jiz existuje zadost o vraceni."
+  }
+}

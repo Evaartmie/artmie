@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Rucksendung beantragen"
+  },
+  "returnForm": {
+    "title": "Rucksendung beantragen",
+    "selectItems": "Wahlen Sie Artikel zur Rucksendung",
+    "noEligibleItems": "Fur diese Bestellung wurden keine berechtigten Artikel gefunden.",
+    "quantityLabel": "Menge zur Rucksendung",
+    "reasonLabel": "Grund der Rucksendung",
+    "selectReason": "Grund wahlen...",
+    "detailsRequired": "Details (erforderlich)",
+    "detailsOptional": "Weitere Details (optional)",
+    "customerNotes": "Anmerkungen fur den Shop (optional)",
+    "submit": "Rucksendung einreichen",
+    "submitting": "Wird gesendet...",
+    "errorSelectItem": "Bitte wahlen Sie mindestens einen Artikel zur Rucksendung.",
+    "errorSelectReason": "Bitte wahlen Sie einen Rucksendegrund fur alle Artikel."
+  },
+  "returnStatus": {
+    "title": "Rucksendestatus",
+    "pending": "Wird gepruft",
+    "approved": "Genehmigt",
+    "rejected": "Abgelehnt",
+    "inTransit": "Unterwegs",
+    "received": "Empfangen",
+    "refunded": "Erstattet",
+    "closed": "Geschlossen",
+    "cancelled": "Storniert",
+    "items": "Artikel",
+    "timeline": "Verlauf",
+    "tracking": "Sendungsverfolgung",
+    "carrier": "Versanddienstleister",
+    "requested": "Beantragt",
+    "cancel": "Rucksendung stornieren"
+  },
+  "success": {
+    "title": "Rucksendung eingereicht",
+    "message": "Ihre Rucksendung wurde erfolgreich eingereicht. Wir werden sie prufen und uns in Kurze bei Ihnen melden.",
+    "checkStatus": "Den Status Ihrer Rucksendung konnen Sie in der Bestellhistorie verfolgen."
+  },
+  "error": {
+    "generic": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
+    "windowExpired": "Die Rucksendefrist fur diese Bestellung ist abgelaufen.",
+    "existingReturn": "Fur diese Bestellung existiert bereits eine Rucksendeanfrage."
+  }
+}

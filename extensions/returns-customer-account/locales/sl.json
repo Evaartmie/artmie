@@ -1,0 +1,47 @@
+{
+  "menuItem": {
+    "label": "Zahtevaj vracilo"
+  },
+  "returnForm": {
+    "title": "Zahteva za vracilo",
+    "selectItems": "Izberite izdelke za vracilo",
+    "noEligibleItems": "Za to narocilo ni najdenih upravicenih izdelkov.",
+    "quantityLabel": "Kolicina za vracilo",
+    "reasonLabel": "Razlog vracila",
+    "selectReason": "Izberite razlog...",
+    "detailsRequired": "Podrobnosti (obvezno)",
+    "detailsOptional": "Dodatne podrobnosti (neobvezno)",
+    "customerNotes": "Opombe za trgovino (neobvezno)",
+    "submit": "Posli zahtevo za vracilo",
+    "submitting": "Posiljanje...",
+    "errorSelectItem": "Prosimo, izberite vsaj en izdelek za vracilo.",
+    "errorSelectReason": "Prosimo, izberite razlog vracila za vse izdelke."
+  },
+  "returnStatus": {
+    "title": "Status vracila",
+    "pending": "Caka na pregled",
+    "approved": "Odobreno",
+    "rejected": "Zavrnjeno",
+    "inTransit": "V transportu",
+    "received": "Prejeto",
+    "refunded": "Povrnjeno",
+    "closed": "Zaprto",
+    "cancelled": "Preklicano",
+    "items": "Izdelki",
+    "timeline": "Zgodovina",
+    "tracking": "Sledenje",
+    "carrier": "Prevoznik",
+    "requested": "Zahtevano",
+    "cancel": "Preklici vracilo"
+  },
+  "success": {
+    "title": "Zahteva za vracilo poslana",
+    "message": "Vasa zahteva za vracilo je bila uspesno poslana. Pregledali jo bomo in se vam kmalu oglasili.",
+    "checkStatus": "Status vracila lahko spremljate v zgodovini narocil."
+  },
+  "error": {
+    "generic": "Nekaj je slo narobe. Prosimo, poskusite znova.",
+    "windowExpired": "Rok za vracilo tega narocila je potekel.",
+    "existingReturn": "Zahteva za vracilo ze obstaja za to narocilo."
+  }
+}

@@ -85,6 +85,7 @@ model ReturnRequest {
   currency          String    @default("EUR")
   adminNotes        String?
   customerNotes     String?
+  customerIban      String?   // IBAN for refund
   trackingNumber    String?
   trackingUrl       String?
   shippingCarrier   String?
