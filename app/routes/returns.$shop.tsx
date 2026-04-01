@@ -154,10 +154,12 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       );
 
       const result = await response.json();
+      console.log("Shopify API response:", JSON.stringify(result, null, 2));
       const order = result?.data?.orders?.edges?.[0]?.node;
 
       if (!order) {
-        return json({ error: "Objednávka nebola nájdená. Skontrolujte číslo objednávky.", step: "lookup" });
+        const debugInfo = `Shop: ${shopDomain}, Query: name:${orderNumber.replace(/^#/, '')}, Errors: ${JSON.stringify(result?.errors || "none")}`;
+        return json({ error: `Objednávka nebola nájdená. (Debug: ${debugInfo})`, step: "lookup" });
       }
 
       // Verify email
