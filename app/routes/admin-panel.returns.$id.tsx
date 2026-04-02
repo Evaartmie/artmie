@@ -1,6 +1,7 @@
 import type { LoaderFunctionArgs, ActionFunctionArgs } from "@remix-run/node";
 import { json, redirect } from "@remix-run/node";
 import { useLoaderData, Form, useNavigation, useNavigate } from "@remix-run/react";
+import { useState } from "react";
 import { requireAdminAuth, getStoreName, getStoreBrand } from "../utils/admin-auth.server";
 import { prisma } from "../db.server";
 
@@ -62,12 +63,58 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   if (!returnRequest) return json({ error: "Not found" }, { status: 404 });
 
   switch (intent) {
-    case "approve":
+    case "approve": {
+      const resolution = formData.get("resolution") as string || "";
+      const claimNumber = formData.get("claimNumber") as string || "";
+      const refundAmountApprove = formData.get("refundAmountApprove") as string || "";
+      const creditNote = formData.get("creditNote") as string || "no";
+      const creditNoteNumber = formData.get("creditNoteNumber") as string || "";
+
+      // Build approval note with all details
+      const noteParts: string[] = ["Schválené cez admin panel"];
+      if (resolution === "send_product") {
+        noteParts.push(`Riešenie: Posielame nový tovar`);
+        if (claimNumber) noteParts.push(`Č. reklamácie: ${claimNumber}`);
+      } else if (resolution === "refund_amount") {
+        noteParts.push(`Riešenie: Vraciame čiastku ${refundAmountApprove} ${returnRequest.currency}`);
+      }
+      if (creditNote === "yes") {
+        noteParts.push(`Dobropis: ÁNO${creditNoteNumber ? ` (č. ${creditNoteNumber})` : ""}`);
+      }
+      const approveNote = noteParts.join(" | ");
+
+      // Build adminNotes with structured data
+      const adminDetails: string[] = [];
+      if (resolution === "send_product") {
+        adminDetails.push(`[SCHVÁLENIE] Posielame nový tovar`);
+        if (claimNumber) adminDetails.push(`Č. reklamácie: ${claimNumber}`);
+      } else if (resolution === "refund_amount") {
+        adminDetails.push(`[SCHVÁLENIE] Vraciame čiastku: ${refundAmountApprove} ${returnRequest.currency}`);
+      }
+      if (creditNote === "yes") {
+        adminDetails.push(`Dobropis: ÁNO${creditNoteNumber ? `, č. ${creditNoteNumber}` : ""}`);
+      } else {
+        adminDetails.push(`Dobropis: NIE`);
+      }
+      const existingNotes = returnRequest.adminNotes || "";
+      const newAdminNotes = existingNotes
+        ? `${existingNotes}\n---\n${adminDetails.join("\n")}`
+        : adminDetails.join("\n");
+
       await prisma.$transaction([
-        prisma.returnRequest.update({ where: { id }, data: { status: "approved", approvedAt: new Date() } }),
-        prisma.returnStatusHistory.create({ data: { returnRequestId: id!, fromStatus: returnRequest.status, toStatus: "approved", changedBy: "admin-panel", note: "Schválené cez admin panel" } }),
+        prisma.returnRequest.update({
+          where: { id },
+          data: {
+            status: "approved",
+            approvedAt: new Date(),
+            adminNotes: newAdminNotes,
+            totalRefundAmount: resolution === "refund_amount" && refundAmountApprove ? parseFloat(refundAmountApprove) : returnRequest.totalRefundAmount,
+          },
+        }),
+        prisma.returnStatusHistory.create({ data: { returnRequestId: id!, fromStatus: returnRequest.status, toStatus: "approved", changedBy: "admin-panel", note: approveNote } }),
       ]);
       break;
+    }
     case "reject": {
       const reason = formData.get("rejectReason") as string || "";
       await prisma.$transaction([
@@ -111,6 +158,9 @@ export default function AdminReturnDetail() {
   const navigation = useNavigation();
   const navigate = useNavigate();
   const isSubmitting = navigation.state === "submitting";
+
+  const [approveResolution, setApproveResolution] = useState("send_product");
+  const [approveCreditNote, setApproveCreditNote] = useState("no");
 
   const totalValue = ret.lineItems.reduce((sum, li) => sum + li.pricePerItem * li.quantity, 0);
   const canApprove = ret.status === "pending";
@@ -242,9 +292,58 @@ export default function AdminReturnDetail() {
           <div className="card" style={{ marginBottom: 16 }}>
             <h3 style={{ marginBottom: 12 }}>Akcie</h3>
             {canApprove && (
-              <Form method="post" style={{ marginBottom: 8 }}>
+              <Form method="post" style={{ marginBottom: 12 }}>
                 <input type="hidden" name="intent" value="approve" />
-                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#22c55e", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>✓ Schváliť</button>
+
+                {/* Typ riešenia */}
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 6 }}>Typ riešenia</label>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", padding: "8px 10px", background: approveResolution === "send_product" ? "#f0fdf4" : "#f9fafb", border: `1px solid ${approveResolution === "send_product" ? "#86efac" : "#e5e7eb"}`, borderRadius: 6 }}>
+                      <input type="radio" name="resolution" value="send_product" checked={approveResolution === "send_product"} onChange={() => setApproveResolution("send_product")} style={{ accentColor: "#22c55e" }} />
+                      <span style={{ fontWeight: 500 }}>📦 Posielame nový tovar</span>
+                    </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", padding: "8px 10px", background: approveResolution === "refund_amount" ? "#f0f9ff" : "#f9fafb", border: `1px solid ${approveResolution === "refund_amount" ? "#93c5fd" : "#e5e7eb"}`, borderRadius: 6 }}>
+                      <input type="radio" name="resolution" value="refund_amount" checked={approveResolution === "refund_amount"} onChange={() => setApproveResolution("refund_amount")} style={{ accentColor: "#3b82f6" }} />
+                      <span style={{ fontWeight: 500 }}>💰 Vraciame čiastku</span>
+                    </label>
+                  </div>
+                </div>
+
+                {/* Číslo reklamácie - pri posielaní nového tovaru */}
+                {approveResolution === "send_product" && (
+                  <div style={{ marginBottom: 10 }}>
+                    <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Číslo reklamácie</label>
+                    <input type="text" name="claimNumber" placeholder="napr. REK-2026-001" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                  </div>
+                )}
+
+                {/* Čiastka - pri vracaní peňazí */}
+                {approveResolution === "refund_amount" && (
+                  <div style={{ marginBottom: 10 }}>
+                    <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Suma na vrátenie ({ret.currency})</label>
+                    <input type="number" name="refundAmountApprove" defaultValue={totalValue.toFixed(2)} step="0.01" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                  </div>
+                )}
+
+                {/* Dobropis */}
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Dobropis</label>
+                  <select name="creditNote" value={approveCreditNote} onChange={(e) => setApproveCreditNote(e.target.value)} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
+                    <option value="no">Nie</option>
+                    <option value="yes">Áno</option>
+                  </select>
+                </div>
+
+                {/* Číslo dobropisu */}
+                {approveCreditNote === "yes" && (
+                  <div style={{ marginBottom: 10 }}>
+                    <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Číslo dobropisu</label>
+                    <input type="text" name="creditNoteNumber" placeholder="napr. DOB-2026-001" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                  </div>
+                )}
+
+                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#22c55e", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14, marginTop: 4 }}>✓ Schváliť</button>
               </Form>
             )}
             {canReject && (
