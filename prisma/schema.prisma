@@ -89,6 +89,8 @@ model ReturnRequest {
   trackingNumber    String?
   trackingUrl       String?
   shippingCarrier   String?
+  intakeCompleted   Boolean   @default(false)
+  intakeCompletedAt DateTime?
   approvedAt        DateTime?
   rejectedAt        DateTime?
   receivedAt        DateTime?
@@ -119,6 +121,7 @@ model ReturnLineItem {
   productTitle        String
   variantTitle        String?
   sku                 String?
+  imageUrl            String?   // Product image URL from Shopify
   quantity            Int
   pricePerItem        Float
   reasonId            String?

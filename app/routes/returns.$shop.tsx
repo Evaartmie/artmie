@@ -1160,6 +1160,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         productTitle: item.title,
         variantTitle: item.variantTitle,
         sku: item.sku,
+        imageUrl: item.imageUrl || null,
         quantity: 1,
         pricePerItem: item.price,
         reasonId: null, // Reason stored as label in customerNote
@@ -1190,6 +1191,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
               productTitle: item.productTitle,
               variantTitle: item.variantTitle || null,
               sku: item.sku || null,
+              imageUrl: item.imageUrl || null,
               quantity: item.quantity,
               pricePerItem: item.pricePerItem,
               reasonId: item.reasonId || null,

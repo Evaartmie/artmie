@@ -51,6 +51,7 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
       receivedAt: returnRequest.receivedAt?.toISOString() || null,
       refundedAt: returnRequest.refundedAt?.toISOString() || null,
       closedAt: returnRequest.closedAt?.toISOString() || null,
+      intakeCompletedAt: returnRequest.intakeCompletedAt?.toISOString() || null,
       statusHistory: returnRequest.statusHistory.map(h => ({
         ...h,
         createdAt: h.createdAt.toISOString(),
@@ -233,6 +234,17 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       ]);
       break;
     }
+    case "toggle-intake": {
+      const intakeValue = formData.get("intakeCompleted") === "true";
+      await prisma.returnRequest.update({
+        where: { id },
+        data: {
+          intakeCompleted: intakeValue,
+          intakeCompletedAt: intakeValue ? new Date() : null,
+        },
+      });
+      break;
+    }
   }
 
   return redirect(`/admin-panel/returns/${id}`);
@@ -301,28 +313,71 @@ export default function AdminReturnDetail() {
           </div>
 
           <div className="card" style={{ marginBottom: 16 }}>
-            <h3 style={{ marginBottom: 12 }}>Produkty ({ret.lineItems.length})</h3>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <h3>Produkty ({ret.lineItems.length})</h3>
+
+              {/* Intake Smema toggle */}
+              <Form method="post" style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <input type="hidden" name="intent" value="toggle-intake" />
+                <input type="hidden" name="intakeCompleted" value={ret.intakeCompleted ? "false" : "true"} />
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 8,
+                  padding: "6px 12px", borderRadius: 8,
+                  background: ret.intakeCompleted ? "#f0fdf4" : "#fef3c7",
+                  border: `1px solid ${ret.intakeCompleted ? "#86efac" : "#fcd34d"}`,
+                }}>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: ret.intakeCompleted ? "#166534" : "#92400e" }}>
+                    Intake Smema: {ret.intakeCompleted ? "ÁNO" : "NIE"}
+                  </span>
+                  {ret.intakeCompletedAt && (
+                    <span style={{ fontSize: 11, color: "#6b7280" }}>
+                      ({new Date(ret.intakeCompletedAt).toLocaleDateString("sk-SK")})
+                    </span>
+                  )}
+                  <button type="submit" disabled={isSubmitting} style={{
+                    padding: "3px 10px", borderRadius: 6, fontSize: 12, fontWeight: 500, cursor: "pointer", border: "none",
+                    background: ret.intakeCompleted ? "#fee2e2" : "#dcfce7",
+                    color: ret.intakeCompleted ? "#991b1b" : "#166534",
+                  }}>
+                    {ret.intakeCompleted ? "Zrušiť" : "Označiť"}
+                  </button>
+                </div>
+              </Form>
+            </div>
+
             {ret.lineItems.map((li) => (
               <div key={li.id} style={{ padding: "12px 0", borderBottom: "1px solid #f3f4f6" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
-                  <div>
-                    <div style={{ fontWeight: 600 }}>{li.productTitle}</div>
-                    {li.variantTitle && <div style={{ fontSize: 13, color: "#6b7280" }}>{li.variantTitle}</div>}
-                    {li.sku && <div style={{ fontSize: 12, color: "#9ca3af" }}>SKU: {li.sku}</div>}
-                    <div style={{ marginTop: 6 }}>
-                      <span style={{ fontSize: 13, fontWeight: 500, color: "#dc2626" }}>
-                        Dôvod: {li.reason?.label || (li.customerNote?.split("\n")[0]) || "Nezadaný"}
-                      </span>
+                <div style={{ display: "flex", gap: 12, alignItems: "start" }}>
+                  {/* Product image */}
+                  {li.imageUrl ? (
+                    <img src={li.imageUrl} alt={li.productTitle} style={{ width: 64, height: 64, borderRadius: 8, objectFit: "cover", border: "1px solid #e5e7eb", flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: 64, height: 64, borderRadius: 8, background: "#f3f4f6", border: "1px solid #e5e7eb", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#d1d5db", fontSize: 24 }}>
+                      🖼
                     </div>
-                    {li.customerNote && (
-                      <div style={{ marginTop: 4, fontSize: 13, color: "#374151", background: "#f9fafb", padding: "6px 10px", borderRadius: 6, borderLeft: "3px solid #6366f1", whiteSpace: "pre-line" }}>
-                        {li.customerNote}
+                  )}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{li.productTitle}</div>
+                        {li.variantTitle && <div style={{ fontSize: 13, color: "#6b7280" }}>{li.variantTitle}</div>}
+                        {li.sku && <div style={{ fontSize: 12, color: "#9ca3af" }}>SKU: {li.sku}</div>}
+                        <div style={{ marginTop: 6 }}>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: "#dc2626" }}>
+                            Dôvod: {li.reason?.label || (li.customerNote?.split("\n")[0]) || "Nezadaný"}
+                          </span>
+                        </div>
+                        {li.customerNote && (
+                          <div style={{ marginTop: 4, fontSize: 13, color: "#374151", background: "#f9fafb", padding: "6px 10px", borderRadius: 6, borderLeft: "3px solid #6366f1", whiteSpace: "pre-line" }}>
+                            {li.customerNote}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div style={{ textAlign: "right", whiteSpace: "nowrap" }}>
-                    <div style={{ fontSize: 13, color: "#6b7280" }}>Qty: {li.quantity}</div>
-                    <div style={{ fontWeight: 600 }}>{(li.pricePerItem * li.quantity).toFixed(2)} {ret.currency}</div>
+                      <div style={{ textAlign: "right", whiteSpace: "nowrap", flexShrink: 0 }}>
+                        <div style={{ fontSize: 13, color: "#6b7280" }}>Qty: {li.quantity}</div>
+                        <div style={{ fontWeight: 600 }}>{(li.pricePerItem * li.quantity).toFixed(2)} {ret.currency}</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
