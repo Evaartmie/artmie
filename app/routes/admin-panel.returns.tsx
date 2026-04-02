@@ -208,7 +208,7 @@ export default function AdminReturns() {
               </thead>
               <tbody>
                 {returns.map((ret) => (
-                  <tr key={ret.id}>
+                  <tr key={ret.id} onClick={() => navigate(`/admin-panel/returns/${ret.id}`)} style={{ cursor: "pointer" }} className="clickable-row">
                     <td>
                       <span className={`store-badge store-${ret.storeBrand.toLowerCase()}`}>
                         {ret.storeName}

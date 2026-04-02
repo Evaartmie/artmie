@@ -813,17 +813,21 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         return json({ error: "Email sa nezhoduje s objednávkou.", step: "lookup" });
       }
 
-      // Check if return already exists
-      const existingReturn = await prisma.returnRequest.findFirst({
+      // Find already returned line items (from active returns)
+      const existingReturns = await prisma.returnRequest.findMany({
         where: {
           shop: shopDomain,
           shopifyOrderId: String(order.id),
           status: { notIn: ["cancelled", "closed"] },
         },
+        include: { lineItems: true },
       });
 
-      if (existingReturn) {
-        return json({ error: "Pre túto objednávku už existuje žiadosť o vrátenie.", step: "lookup" });
+      const alreadyReturnedLineItemIds = new Set<string>();
+      for (const ret of existingReturns) {
+        for (const li of ret.lineItems) {
+          alreadyReturnedLineItemIds.add(li.shopifyLineItemId);
+        }
       }
 
       // Fetch product images for all line items
@@ -853,7 +857,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         }
       }
 
-      // Map line items with images
+      // Map line items with images and mark already returned ones
       const lineItems = (order.line_items || []).map((item: any) => ({
         id: String(item.id),
         title: item.title || "",
@@ -863,7 +867,14 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         price: parseFloat(item.price || "0"),
         currency: order.currency || "EUR",
         imageUrl: productImages[String(item.product_id)] || "",
+        alreadyReturned: alreadyReturnedLineItemIds.has(String(item.id)),
       }));
+
+      // Check if ALL items are already returned
+      const availableItems = lineItems.filter((li: any) => !li.alreadyReturned);
+      if (availableItems.length === 0) {
+        return json({ error: t.existingReturn, step: "lookup" });
+      }
 
       return json({
         step: "form",
@@ -1197,13 +1208,17 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
 
           {order.lineItems.map((item: any) => (
             <div key={item.id}>
-              <div className="product-item">
-                <input
-                  type="checkbox"
-                  className="product-checkbox"
-                  checked={selectedItems.includes(item.id)}
-                  onChange={() => toggleItem(item.id)}
-                />
+              <div className="product-item" style={item.alreadyReturned ? { opacity: 0.5, pointerEvents: "none" } : {}}>
+                {item.alreadyReturned ? (
+                  <div className="product-checkbox" style={{ width: 20, height: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "#999", fontSize: 14 }}>✓</div>
+                ) : (
+                  <input
+                    type="checkbox"
+                    className="product-checkbox"
+                    checked={selectedItems.includes(item.id)}
+                    onChange={() => toggleItem(item.id)}
+                  />
+                )}
                 {item.imageUrl ? (
                   <img src={item.imageUrl} alt={item.title} className="product-img" />
                 ) : (
@@ -1214,6 +1229,11 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
                   {item.variantTitle && <div className="product-variant">{item.variantTitle}</div>}
                   {item.sku && <div className="product-variant">SKU: {item.sku}</div>}
                   <div className="product-price">{item.price.toFixed(2)} {item.currency} × {item.quantity}</div>
+                  {item.alreadyReturned && (
+                    <div style={{ color: "#e67e22", fontSize: 12, fontWeight: 600, marginTop: 4 }}>
+                      ⚠ {lang === "sk" || lang === "cs" ? "Už reklamované" : lang === "hu" ? "Már visszaküldve" : lang === "pl" ? "Już zgłoszono zwrot" : lang === "de" ? "Bereits zurückgegeben" : lang === "it" ? "Già restituito" : lang === "el" ? "Ήδη επιστράφηκε" : lang === "ro" ? "Deja returnat" : lang === "bg" ? "Вече върнат" : lang === "sr" ? "Већ враћено" : lang === "sl" ? "Že vrnjeno" : lang === "hr" || lang === "bs" ? "Već vraćeno" : "Already returned"}
+                    </div>
+                  )}
                 </div>
               </div>
 
