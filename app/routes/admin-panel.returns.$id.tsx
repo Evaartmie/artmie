@@ -468,7 +468,7 @@ export default function AdminReturnDetail() {
 
           {/* Shipping / Label section */}
           <div className="card" style={{ marginBottom: 16 }}>
-            <h3 style={{ marginBottom: 12 }}>Preprava</h3>
+            <h3 style={{ marginBottom: 12 }}>Preprava Return</h3>
 
             {/* Show existing tracking info */}
             {ret.trackingNumber && (
