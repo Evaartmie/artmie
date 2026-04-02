@@ -2,7 +2,7 @@
 // Maps shop domains to countries and available carriers per country.
 // API keys will be added via environment variables when available.
 
-export type CarrierCode = "sps_sk" | "gls_sk" | "packeta_sk" | "ppl_cz" | "gls_hu" | "fancourier_ro" | "dpd_hr" | "dpd_bg" | "dpd_ba" | "dpd_si" | "dhl_de" | "brt_it" | "acs_gr";
+export type CarrierCode = "sps_sk" | "gls_sk" | "packeta_sk" | "ppl_cz" | "gls_hu" | "fancourier_ro" | "mikmik_ba" | "boxpi" | "dhl_de" | "brt_it" | "acs_gr";
 
 export interface CarrierConfig {
   code: CarrierCode;
@@ -72,37 +72,21 @@ export const CARRIERS: Record<CarrierCode, CarrierConfig> = {
     apiConfigured: !!process.env.FANCOURIER_API_KEY,
     trackingUrlTemplate: "https://www.fancourier.ro/awb-tracking/?tracking={tracking}",
   },
-  dpd_hr: {
-    code: "dpd_hr",
-    name: "DPD Croatia",
-    country: "HR",
-    logo: "🔴",
-    apiConfigured: !!process.env.DPD_HR_API_KEY,
-    trackingUrlTemplate: "https://tracking.dpd.de/parcelstatus?query={tracking}&locale=hr_HR",
+  boxpi: {
+    code: "boxpi",
+    name: "Boxpi (GymBeam KE)",
+    country: "EU",
+    logo: "📦",
+    apiConfigured: !!process.env.BOXPI_API_KEY,
+    trackingUrlTemplate: "https://tracking.boxpi.com/{tracking}",
   },
-  dpd_bg: {
-    code: "dpd_bg",
-    name: "DPD / Speedy Bulgaria",
-    country: "BG",
-    logo: "🔴",
-    apiConfigured: !!process.env.DPD_BG_API_KEY,
-    trackingUrlTemplate: "https://tracking.dpd.de/parcelstatus?query={tracking}&locale=bg_BG",
-  },
-  dpd_ba: {
-    code: "dpd_ba",
-    name: "DPD Bosnia",
+  mikmik_ba: {
+    code: "mikmik_ba",
+    name: "MikMik Express",
     country: "BA",
-    logo: "🔴",
-    apiConfigured: !!process.env.DPD_BA_API_KEY,
-    trackingUrlTemplate: "https://tracking.dpd.de/parcelstatus?query={tracking}",
-  },
-  dpd_si: {
-    code: "dpd_si",
-    name: "DPD Slovenia",
-    country: "SI",
-    logo: "🔴",
-    apiConfigured: !!process.env.DPD_SI_API_KEY,
-    trackingUrlTemplate: "https://tracking.dpd.de/parcelstatus?query={tracking}&locale=sl_SI",
+    logo: "📬",
+    apiConfigured: !!process.env.MIKMIK_API_KEY,
+    trackingUrlTemplate: "https://www.mikmik.ba/tracking/{tracking}",
   },
   dhl_de: {
     code: "dhl_de",
@@ -128,6 +112,7 @@ export const CARRIERS: Record<CarrierCode, CarrierConfig> = {
     apiConfigured: !!process.env.ACS_GR_API_KEY,
     trackingUrlTemplate: "https://www.acscourier.net/el/track-and-trace?p_p_id=ACSCustomerServicesPortlet&nummer={tracking}",
   },
+  // Note: DHL DE, BRT IT, ACS GR kept as backup options. Primary for HR/BG/SI/PL/DE/IT/GR/MK is Boxpi.
 };
 
 // ── Shop → Country mapping ──────────────────────────────────────────────
@@ -179,17 +164,17 @@ const COUNTRY_CARRIERS: Record<string, CarrierCode[]> = {
   SK: ["sps_sk", "gls_sk", "packeta_sk"],
   CZ: ["ppl_cz", "sps_sk", "packeta_sk"],
   HU: ["gls_hu", "packeta_sk", "sps_sk"],
-  PL: ["packeta_sk"],
+  PL: ["boxpi"],
   RO: ["fancourier_ro"],
-  BG: ["dpd_bg"],
-  HR: ["dpd_hr"],
-  BA: ["dpd_ba"],
-  SI: ["dpd_si"],
-  RS: ["dpd_ba"], // Use BA DPD for RS
-  MK: ["dpd_bg"], // Use BG DPD for MK
-  DE: ["dhl_de"],
-  IT: ["brt_it"],
-  GR: ["acs_gr"],
+  BG: ["boxpi"],
+  HR: ["boxpi"],
+  BA: ["mikmik_ba"],
+  SI: ["boxpi"],
+  RS: ["mikmik_ba"],
+  MK: ["boxpi"],
+  DE: ["boxpi"],
+  IT: ["boxpi"],
+  GR: ["boxpi"],
 };
 
 export function getCountryForShop(shop: string): string {
@@ -275,10 +260,8 @@ function getEnvVarName(code: CarrierCode): string {
     packeta_sk: "PACKETA_API_KEY",
     ppl_cz: "PPL_CZ_API_KEY",
     fancourier_ro: "FANCOURIER_API_KEY",
-    dpd_hr: "DPD_HR_API_KEY",
-    dpd_bg: "DPD_BG_API_KEY",
-    dpd_ba: "DPD_BA_API_KEY",
-    dpd_si: "DPD_SI_API_KEY",
+    mikmik_ba: "MIKMIK_API_KEY",
+    boxpi: "BOXPI_API_KEY",
     dhl_de: "DHL_DE_API_KEY",
     brt_it: "BRT_IT_API_KEY",
     acs_gr: "ACS_GR_API_KEY",
