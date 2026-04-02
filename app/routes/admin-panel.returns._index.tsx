@@ -1,8 +1,38 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useLoaderData, useSearchParams, useNavigate } from "@remix-run/react";
+import { useState, useRef, useEffect } from "react";
 import { requireAdminAuth, getStoreName, getStoreBrand, STORE_NAMES } from "../utils/admin-auth.server";
 import { prisma } from "../db.server";
+
+// Reason code → label mapping (same as in returns portal)
+const REASON_LABELS: Record<string, string> = {
+  "Reklamácia: Nesprávny produkt": "Nesprávny produkt",
+  "Reklamácia: Chýbajúci produkt": "Chýbajúci produkt",
+  "Reklamácia: Poškodený produkt": "Poškodený produkt",
+  "Reklamácia: Nekvalitný produkt": "Nekvalitný produkt",
+  "Vrátenie: Odstúpenie do 14 dní": "Odstúpenie 14 dní",
+  "Vrátenie: Do 30 dní": "Vrátenie 30 dní",
+  "Vrátenie: Do 100 dní": "Vrátenie 100 dní",
+  "Výmena tovaru": "Výmena tovaru",
+};
+
+const REASON_CATEGORIES: Record<string, string[]> = {
+  "Reklamácia": [
+    "Reklamácia: Nesprávny produkt",
+    "Reklamácia: Chýbajúci produkt",
+    "Reklamácia: Poškodený produkt",
+    "Reklamácia: Nekvalitný produkt",
+  ],
+  "Vrátenie": [
+    "Vrátenie: Odstúpenie do 14 dní",
+    "Vrátenie: Do 30 dní",
+    "Vrátenie: Do 100 dní",
+  ],
+  "Výmena": [
+    "Výmena tovaru",
+  ],
+};
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await requireAdminAuth(request);
@@ -11,6 +41,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const shopFilter = url.searchParams.get("shop") || "all";
   const statusFilter = url.searchParams.get("status") || "all";
   const brandFilter = url.searchParams.get("brand") || "all";
+  const reasonFilter = url.searchParams.get("reasons") || "all"; // comma-separated reason keys
   const page = parseInt(url.searchParams.get("page") || "1");
   const perPage = 50;
 
@@ -34,6 +65,18 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   if (statusFilter !== "all") {
     where.status = statusFilter;
+  }
+
+  // Reason filter - filter returns that have lineItems with matching customerNote prefix
+  const selectedReasons = reasonFilter !== "all" ? reasonFilter.split(",") : [];
+  if (selectedReasons.length > 0) {
+    where.lineItems = {
+      some: {
+        OR: selectedReasons.map((r: string) => ({
+          customerNote: { startsWith: r },
+        })),
+      },
+    };
   }
 
   const totalCount = await prisma.returnRequest.count({ where });
@@ -73,6 +116,22 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     count: s._count.status,
   }));
 
+  // Collect unique reasons from all line items
+  const allLineItems = await prisma.returnLineItem.findMany({
+    select: { customerNote: true },
+    where: { customerNote: { not: null } },
+    distinct: ["customerNote"],
+  });
+  const uniqueReasons: { reason: string; label: string }[] = [];
+  const seenReasons = new Set<string>();
+  for (const li of allLineItems) {
+    const firstLine = li.customerNote?.split("\n")[0] || "";
+    if (firstLine && !seenReasons.has(firstLine)) {
+      seenReasons.add(firstLine);
+      uniqueReasons.push({ reason: firstLine, label: REASON_LABELS[firstLine] || firstLine });
+    }
+  }
+
   const totalPages = Math.ceil(totalCount / perPage);
 
   return json({
@@ -88,10 +147,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     })),
     shops,
     statuses,
+    uniqueReasons,
     totalCount,
     totalPages,
     currentPage: page,
-    filters: { shop: shopFilter, status: statusFilter, brand: brandFilter },
+    filters: { shop: shopFilter, status: statusFilter, brand: brandFilter, reasons: reasonFilter },
   });
 };
 
@@ -107,10 +167,25 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function AdminReturnsList() {
-  const { returns, shops, statuses, totalCount, totalPages, currentPage, filters } =
+  const { returns, shops, statuses, uniqueReasons, totalCount, totalPages, currentPage, filters } =
     useLoaderData<typeof loader>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const [reasonDropdownOpen, setReasonDropdownOpen] = useState(false);
+  const reasonDropdownRef = useRef<HTMLDivElement>(null);
+
+  const selectedReasons = filters.reasons !== "all" ? filters.reasons.split(",") : [];
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (reasonDropdownRef.current && !reasonDropdownRef.current.contains(e.target as Node)) {
+        setReasonDropdownOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams);
@@ -119,6 +194,30 @@ export default function AdminReturnsList() {
     } else {
       params.set(key, value);
     }
+    params.delete("page");
+    navigate(`/admin-panel/returns?${params.toString()}`);
+  }
+
+  function toggleReason(reason: string) {
+    const current = new Set(selectedReasons);
+    if (current.has(reason)) {
+      current.delete(reason);
+    } else {
+      current.add(reason);
+    }
+    const params = new URLSearchParams(searchParams);
+    if (current.size === 0) {
+      params.delete("reasons");
+    } else {
+      params.set("reasons", Array.from(current).join(","));
+    }
+    params.delete("page");
+    navigate(`/admin-panel/returns?${params.toString()}`);
+  }
+
+  function clearReasons() {
+    const params = new URLSearchParams(searchParams);
+    params.delete("reasons");
     params.delete("page");
     navigate(`/admin-panel/returns?${params.toString()}`);
   }
@@ -158,6 +257,116 @@ export default function AdminReturnsList() {
             <option key={s.status} value={s.status}>{STATUS_LABELS[s.status] || s.status} ({s.count})</option>
           ))}
         </select>
+
+        {/* Multi-select reason filter */}
+        <div ref={reasonDropdownRef} style={{ position: "relative" }}>
+          <button
+            type="button"
+            className="filter-select"
+            onClick={() => setReasonDropdownOpen(!reasonDropdownOpen)}
+            style={{
+              display: "flex", alignItems: "center", gap: 6,
+              background: selectedReasons.length > 0 ? "#eef2ff" : "white",
+              borderColor: selectedReasons.length > 0 ? "#6366f1" : "#d1d5db",
+              color: selectedReasons.length > 0 ? "#4338ca" : "#374151",
+              fontWeight: selectedReasons.length > 0 ? 600 : 400,
+            }}
+          >
+            {selectedReasons.length === 0
+              ? "Všetky dôvody"
+              : `Dôvody (${selectedReasons.length})`}
+            <span style={{ fontSize: 10, marginLeft: 4 }}>{reasonDropdownOpen ? "▲" : "▼"}</span>
+          </button>
+
+          {reasonDropdownOpen && (
+            <div style={{
+              position: "absolute", top: "100%", left: 0, marginTop: 4, zIndex: 50,
+              background: "white", border: "1px solid #e5e7eb", borderRadius: 10,
+              boxShadow: "0 8px 24px rgba(0,0,0,0.12)", minWidth: 280, maxHeight: 380, overflowY: "auto",
+            }}>
+              {/* Header */}
+              <div style={{ padding: "10px 14px", borderBottom: "1px solid #f3f4f6", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: "#374151" }}>Filtrovať podľa dôvodu</span>
+                {selectedReasons.length > 0 && (
+                  <button type="button" onClick={clearReasons} style={{ fontSize: 12, color: "#6366f1", background: "none", border: "none", cursor: "pointer", fontWeight: 500 }}>
+                    Zrušiť všetky
+                  </button>
+                )}
+              </div>
+
+              {/* Categories with checkboxes */}
+              {Object.entries(REASON_CATEGORIES).map(([category, reasons]) => (
+                <div key={category}>
+                  <div style={{ padding: "8px 14px 4px", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    {category}
+                  </div>
+                  {reasons.map((reason) => {
+                    const isSelected = selectedReasons.includes(reason);
+                    const matchingFromDB = uniqueReasons.find(r => r.reason === reason);
+                    return (
+                      <label
+                        key={reason}
+                        style={{
+                          display: "flex", alignItems: "center", gap: 10, padding: "7px 14px",
+                          cursor: "pointer", fontSize: 13, transition: "background 0.1s",
+                          background: isSelected ? "#f5f3ff" : "transparent",
+                        }}
+                        onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "#f9fafb"; }}
+                        onMouseLeave={(e) => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleReason(reason)}
+                          style={{ accentColor: "#6366f1", width: 16, height: 16 }}
+                        />
+                        <span style={{ flex: 1, color: isSelected ? "#4338ca" : "#374151", fontWeight: isSelected ? 500 : 400 }}>
+                          {REASON_LABELS[reason] || reason}
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
+              ))}
+
+              {/* Also show any DB reasons not in categories (legacy/old data) */}
+              {uniqueReasons.filter(r => !Object.values(REASON_CATEGORIES).flat().includes(r.reason)).length > 0 && (
+                <div>
+                  <div style={{ padding: "8px 14px 4px", fontSize: 11, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.5px" }}>
+                    Ostatné
+                  </div>
+                  {uniqueReasons
+                    .filter(r => !Object.values(REASON_CATEGORIES).flat().includes(r.reason))
+                    .map((r) => {
+                      const isSelected = selectedReasons.includes(r.reason);
+                      return (
+                        <label
+                          key={r.reason}
+                          style={{
+                            display: "flex", alignItems: "center", gap: 10, padding: "7px 14px",
+                            cursor: "pointer", fontSize: 13,
+                            background: isSelected ? "#f5f3ff" : "transparent",
+                          }}
+                          onMouseEnter={(e) => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "#f9fafb"; }}
+                          onMouseLeave={(e) => { if (!isSelected) (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleReason(r.reason)}
+                            style={{ accentColor: "#6366f1", width: 16, height: 16 }}
+                          />
+                          <span style={{ flex: 1, color: isSelected ? "#4338ca" : "#374151", fontWeight: isSelected ? 500 : 400 }}>
+                            {r.label}
+                          </span>
+                        </label>
+                      );
+                    })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {returns.length === 0 ? (
