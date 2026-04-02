@@ -2,7 +2,7 @@
 // Maps shop domains to countries and available carriers per country.
 // API keys will be added via environment variables when available.
 
-export type CarrierCode = "sps_sk" | "gls_sk" | "packeta_sk" | "ppl_cz" | "gls_hu" | "fancourier_ro" | "mikmik_ba" | "boxpi" | "dhl_de" | "brt_it" | "acs_gr";
+export type CarrierCode = "sps_sk" | "gls_sk" | "packeta_sk" | "ppl_cz" | "gls_hu" | "fancourier_ro" | "euroexpress_ba" | "gls_rs" | "mikmik_mk" | "boxpi" | "dhl_de" | "brt_it" | "acs_gr";
 
 export interface CarrierConfig {
   code: CarrierCode;
@@ -80,13 +80,29 @@ export const CARRIERS: Record<CarrierCode, CarrierConfig> = {
     apiConfigured: !!process.env.BOXPI_API_KEY,
     trackingUrlTemplate: "https://tracking.boxpi.com/{tracking}",
   },
-  mikmik_ba: {
-    code: "mikmik_ba",
-    name: "MikMik Express",
+  euroexpress_ba: {
+    code: "euroexpress_ba",
+    name: "EuroExpress Bosnia",
     country: "BA",
     logo: "📬",
+    apiConfigured: !!process.env.EUROEXPRESS_API_KEY,
+    trackingUrlTemplate: "https://www.euroexpress.ba/pracenje-posiljke?broj={tracking}",
+  },
+  gls_rs: {
+    code: "gls_rs",
+    name: "GLS Serbia",
+    country: "RS",
+    logo: "🟡",
+    apiConfigured: !!process.env.GLS_RS_API_KEY,
+    trackingUrlTemplate: "https://gls-group.eu/RS/sr/pracenje-posiljki?match={tracking}",
+  },
+  mikmik_mk: {
+    code: "mikmik_mk",
+    name: "MikMik Express",
+    country: "MK",
+    logo: "📬",
     apiConfigured: !!process.env.MIKMIK_API_KEY,
-    trackingUrlTemplate: "https://www.mikmik.ba/tracking/{tracking}",
+    trackingUrlTemplate: "https://www.mikmik.mk/tracking/{tracking}",
   },
   dhl_de: {
     code: "dhl_de",
@@ -168,10 +184,10 @@ const COUNTRY_CARRIERS: Record<string, CarrierCode[]> = {
   RO: ["fancourier_ro"],
   BG: ["boxpi"],
   HR: ["boxpi"],
-  BA: ["mikmik_ba"],
+  BA: ["euroexpress_ba"],
   SI: ["boxpi"],
-  RS: ["mikmik_ba"],
-  MK: ["boxpi"],
+  RS: ["gls_rs"],
+  MK: ["mikmik_mk"],
   DE: ["boxpi"],
   IT: ["boxpi"],
   GR: ["boxpi"],
@@ -260,7 +276,9 @@ function getEnvVarName(code: CarrierCode): string {
     packeta_sk: "PACKETA_API_KEY",
     ppl_cz: "PPL_CZ_API_KEY",
     fancourier_ro: "FANCOURIER_API_KEY",
-    mikmik_ba: "MIKMIK_API_KEY",
+    euroexpress_ba: "EUROEXPRESS_API_KEY",
+    gls_rs: "GLS_RS_API_KEY",
+    mikmik_mk: "MIKMIK_API_KEY",
     boxpi: "BOXPI_API_KEY",
     dhl_de: "DHL_DE_API_KEY",
     brt_it: "BRT_IT_API_KEY",
