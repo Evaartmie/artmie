@@ -307,11 +307,11 @@ export default function AdminReturnDetail() {
               </Form>
             )}
 
-            {ret.status === "refunded" || ret.status === "closed" || ret.status === "cancelled" ? (
+            {(ret.status === "refunded" || ret.status === "closed" || ret.status === "cancelled") && (
               <div style={{ textAlign: "center", padding: 12, color: "#9ca3af", fontSize: 13 }}>
                 Žiadne dostupné akcie
               </div>
-            ) : null}
+            )}
           </div>
 
           {/* Admin notes */}
