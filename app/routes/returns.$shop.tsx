@@ -103,7 +103,22 @@ type Translations = {
   existingReturn: string;
   orderNotFound: string;
   enterBoth: string;
-  // Default reasons fallback
+  // Reason categories
+  catClaim: string;        // Reklamácia
+  catReturn: string;       // Vrátenie
+  catExchange: string;     // Výmena
+  claimWrongProduct: string;
+  claimMissing: string;
+  claimDamaged: string;
+  claimLowQuality: string;
+  return14days: string;
+  return30days: string;
+  return100days: string;
+  exchangeLabel: string;
+  exchangeProductCode: string;
+  exchangeProductPrice: string;
+  exchangeQuantity: string;
+  // Legacy fallback
   reasonDamaged: string;
   reasonWrongItem: string;
   reasonNotAsDescribed: string;
@@ -146,6 +161,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "Pre túto objednávku už existuje žiadosť o vrátenie.",
     orderNotFound: "Objednávka nebola nájdená.",
     enterBoth: "Zadajte číslo objednávky aj email.",
+    catClaim: "Reklamácia",
+    catReturn: "Vrátenie tovaru",
+    catExchange: "Výmena tovaru",
+    claimWrongProduct: "Odoslaný nesprávny produkt",
+    claimMissing: "Chýbajúci (nedoručený) produkt",
+    claimDamaged: "Poškodený produkt",
+    claimLowQuality: "Nekvalitný produkt",
+    return14days: "Odstúpenie od zmluvy do 14 dní",
+    return30days: "Vrátenie tovaru do 30 dní",
+    return100days: "Vrátenie tovaru do 100 dní",
+    exchangeLabel: "Výmena tovaru",
+    exchangeProductCode: "Kód nového produktu",
+    exchangeProductPrice: "Cena nového produktu",
+    exchangeQuantity: "Počet kusov",
     reasonDamaged: "Poškodený tovar",
     reasonWrongItem: "Nesprávny tovar",
     reasonNotAsDescribed: "Tovar nezodpovedá popisu",
@@ -186,6 +215,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "Pro tuto objednávku již existuje žádost o vrácení.",
     orderNotFound: "Objednávka nebyla nalezena.",
     enterBoth: "Zadejte číslo objednávky i email.",
+    catClaim: "Reklamace",
+    catReturn: "Vrácení zboží",
+    catExchange: "Výměna zboží",
+    claimWrongProduct: "Odeslaný nesprávný produkt",
+    claimMissing: "Chybějící (nedoručený) produkt",
+    claimDamaged: "Poškozený produkt",
+    claimLowQuality: "Nekvalitní produkt",
+    return14days: "Odstoupení od smlouvy do 14 dnů",
+    return30days: "Vrácení zboží do 30 dnů",
+    return100days: "Vrácení zboží do 100 dnů",
+    exchangeLabel: "Výměna zboží",
+    exchangeProductCode: "Kód nového produktu",
+    exchangeProductPrice: "Cena nového produktu",
+    exchangeQuantity: "Počet kusů",
     reasonDamaged: "Poškozené zboží",
     reasonWrongItem: "Nesprávné zboží",
     reasonNotAsDescribed: "Zboží neodpovídá popisu",
@@ -226,6 +269,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "Ehhez a rendeléshez már létezik visszaküldési kérelem.",
     orderNotFound: "A rendelés nem található.",
     enterBoth: "Adja meg a rendelési számot és az emailt.",
+    catClaim: "Reklamáció",
+    catReturn: "Visszaküldés",
+    catExchange: "Csere",
+    claimWrongProduct: "Rossz termék érkezett",
+    claimMissing: "Hiányzó (nem kézbesített) termék",
+    claimDamaged: "Sérült termék",
+    claimLowQuality: "Gyenge minőségű termék",
+    return14days: "Elállás a szerződéstől 14 napon belül",
+    return30days: "Visszaküldés 30 napon belül",
+    return100days: "Visszaküldés 100 napon belül",
+    exchangeLabel: "Termékcsere",
+    exchangeProductCode: "Új termék kódja",
+    exchangeProductPrice: "Új termék ára",
+    exchangeQuantity: "Darabszám",
     reasonDamaged: "Sérült áru",
     reasonWrongItem: "Hibás termék érkezett",
     reasonNotAsDescribed: "Nem felel meg a leírásnak",
@@ -266,6 +323,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "Dla tego zamówienia już istnieje wniosek o zwrot.",
     orderNotFound: "Zamówienie nie zostało znalezione.",
     enterBoth: "Podaj numer zamówienia i email.",
+    catClaim: "Reklamacja",
+    catReturn: "Zwrot towaru",
+    catExchange: "Wymiana towaru",
+    claimWrongProduct: "Wysłano niewłaściwy produkt",
+    claimMissing: "Brakujący (niedostarczony) produkt",
+    claimDamaged: "Uszkodzony produkt",
+    claimLowQuality: "Produkt niskiej jakości",
+    return14days: "Odstąpienie od umowy do 14 dni",
+    return30days: "Zwrot towaru do 30 dni",
+    return100days: "Zwrot towaru do 100 dni",
+    exchangeLabel: "Wymiana towaru",
+    exchangeProductCode: "Kod nowego produktu",
+    exchangeProductPrice: "Cena nowego produktu",
+    exchangeQuantity: "Ilość sztuk",
     reasonDamaged: "Uszkodzony towar",
     reasonWrongItem: "Niewłaściwy towar",
     reasonNotAsDescribed: "Towar niezgodny z opisem",
@@ -306,6 +377,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "Pentru această comandă există deja o cerere de returnare.",
     orderNotFound: "Comanda nu a fost găsită.",
     enterBoth: "Introduceți numărul comenzii și emailul.",
+    catClaim: "Reclamație",
+    catReturn: "Returnare produs",
+    catExchange: "Schimb produs",
+    claimWrongProduct: "Produs trimis greșit",
+    claimMissing: "Produs lipsă (nelivrat)",
+    claimDamaged: "Produs deteriorat",
+    claimLowQuality: "Produs de calitate slabă",
+    return14days: "Retragere din contract în 14 zile",
+    return30days: "Returnare produs în 30 zile",
+    return100days: "Returnare produs în 100 zile",
+    exchangeLabel: "Schimb produs",
+    exchangeProductCode: "Codul noului produs",
+    exchangeProductPrice: "Prețul noului produs",
+    exchangeQuantity: "Cantitate",
     reasonDamaged: "Produs deteriorat",
     reasonWrongItem: "Produs greșit",
     reasonNotAsDescribed: "Produsul nu corespunde descrierii",
@@ -346,6 +431,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "За тази поръчка вече съществува заявка за връщане.",
     orderNotFound: "Поръчката не е намерена.",
     enterBoth: "Въведете номер на поръчката и имейл.",
+    catClaim: "Рекламация",
+    catReturn: "Връщане на стока",
+    catExchange: "Замяна на стока",
+    claimWrongProduct: "Изпратен грешен продукт",
+    claimMissing: "Липсващ (недоставен) продукт",
+    claimDamaged: "Повреден продукт",
+    claimLowQuality: "Некачествен продукт",
+    return14days: "Отказ от договор до 14 дни",
+    return30days: "Връщане на стока до 30 дни",
+    return100days: "Връщане на стока до 100 дни",
+    exchangeLabel: "Замяна на стока",
+    exchangeProductCode: "Код на нов продукт",
+    exchangeProductPrice: "Цена на нов продукт",
+    exchangeQuantity: "Брой",
     reasonDamaged: "Повреден продукт",
     reasonWrongItem: "Грешен продукт",
     reasonNotAsDescribed: "Продуктът не отговаря на описанието",
@@ -386,6 +485,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "Za ovu narudžbu već postoji zahtjev za povrat.",
     orderNotFound: "Narudžba nije pronađena.",
     enterBoth: "Unesite broj narudžbe i email.",
+    catClaim: "Reklamacija",
+    catReturn: "Povrat robe",
+    catExchange: "Zamjena robe",
+    claimWrongProduct: "Poslan pogrešan proizvod",
+    claimMissing: "Nedostajući (neisporučen) proizvod",
+    claimDamaged: "Oštećen proizvod",
+    claimLowQuality: "Nekvalitetan proizvod",
+    return14days: "Odustajanje od ugovora do 14 dana",
+    return30days: "Povrat robe do 30 dana",
+    return100days: "Povrat robe do 100 dana",
+    exchangeLabel: "Zamjena robe",
+    exchangeProductCode: "Šifra novog proizvoda",
+    exchangeProductPrice: "Cijena novog proizvoda",
+    exchangeQuantity: "Količina",
     reasonDamaged: "Oštećen proizvod",
     reasonWrongItem: "Pogrešan proizvod",
     reasonNotAsDescribed: "Proizvod ne odgovara opisu",
@@ -426,6 +539,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "Za ovu narudžbu već postoji zahtjev za povrat.",
     orderNotFound: "Narudžba nije pronađena.",
     enterBoth: "Unesite broj narudžbe i email.",
+    catClaim: "Reklamacija",
+    catReturn: "Povrat robe",
+    catExchange: "Zamjena robe",
+    claimWrongProduct: "Poslan pogrešan proizvod",
+    claimMissing: "Nedostajući (neisporučen) proizvod",
+    claimDamaged: "Oštećen proizvod",
+    claimLowQuality: "Nekvalitetan proizvod",
+    return14days: "Odustajanje od ugovora do 14 dana",
+    return30days: "Povrat robe do 30 dana",
+    return100days: "Povrat robe do 100 dana",
+    exchangeLabel: "Zamjena robe",
+    exchangeProductCode: "Šifra novog proizvoda",
+    exchangeProductPrice: "Cijena novog proizvoda",
+    exchangeQuantity: "Količina",
     reasonDamaged: "Oštećen proizvod",
     reasonWrongItem: "Pogrešan proizvod",
     reasonNotAsDescribed: "Proizvod ne odgovara opisu",
@@ -466,6 +593,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "Für diese Bestellung existiert bereits ein Rückgabeantrag.",
     orderNotFound: "Bestellung nicht gefunden.",
     enterBoth: "Geben Sie Bestellnummer und E-Mail ein.",
+    catClaim: "Reklamation",
+    catReturn: "Warenrückgabe",
+    catExchange: "Warenaustausch",
+    claimWrongProduct: "Falsches Produkt geliefert",
+    claimMissing: "Fehlendes (nicht geliefertes) Produkt",
+    claimDamaged: "Beschädigtes Produkt",
+    claimLowQuality: "Produkt minderer Qualität",
+    return14days: "Widerruf innerhalb von 14 Tagen",
+    return30days: "Rückgabe innerhalb von 30 Tagen",
+    return100days: "Rückgabe innerhalb von 100 Tagen",
+    exchangeLabel: "Warenaustausch",
+    exchangeProductCode: "Neuer Produktcode",
+    exchangeProductPrice: "Neuer Produktpreis",
+    exchangeQuantity: "Anzahl",
     reasonDamaged: "Beschädigte Ware",
     reasonWrongItem: "Falscher Artikel",
     reasonNotAsDescribed: "Entspricht nicht der Beschreibung",
@@ -506,6 +647,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "За ову поруџбину већ постоји захтев за повраћај.",
     orderNotFound: "Поруџбина није пронађена.",
     enterBoth: "Унесите број поруџбине и имејл.",
+    catClaim: "Рекламација",
+    catReturn: "Повраћај робе",
+    catExchange: "Замена робе",
+    claimWrongProduct: "Послат погрешан производ",
+    claimMissing: "Недостајући (неиспоручен) производ",
+    claimDamaged: "Оштећен производ",
+    claimLowQuality: "Неквалитетан производ",
+    return14days: "Одустајање од уговора до 14 дана",
+    return30days: "Повраћај робе до 30 дана",
+    return100days: "Повраћај робе до 100 дана",
+    exchangeLabel: "Замена робе",
+    exchangeProductCode: "Шифра новог производа",
+    exchangeProductPrice: "Цена новог производа",
+    exchangeQuantity: "Количина",
     reasonDamaged: "Оштећен производ",
     reasonWrongItem: "Погрешан производ",
     reasonNotAsDescribed: "Производ не одговара опису",
@@ -546,6 +701,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "Za to naročilo že obstaja zahtevek za vračilo.",
     orderNotFound: "Naročilo ni najdeno.",
     enterBoth: "Vnesite številko naročila in email.",
+    catClaim: "Reklamacija",
+    catReturn: "Vračilo blaga",
+    catExchange: "Zamenjava blaga",
+    claimWrongProduct: "Poslan napačen izdelek",
+    claimMissing: "Manjkajoči (nedostavljeni) izdelek",
+    claimDamaged: "Poškodovan izdelek",
+    claimLowQuality: "Izdelek slabe kakovosti",
+    return14days: "Odstop od pogodbe do 14 dni",
+    return30days: "Vračilo blaga do 30 dni",
+    return100days: "Vračilo blaga do 100 dni",
+    exchangeLabel: "Zamenjava blaga",
+    exchangeProductCode: "Koda novega izdelka",
+    exchangeProductPrice: "Cena novega izdelka",
+    exchangeQuantity: "Količina",
     reasonDamaged: "Poškodovan izdelek",
     reasonWrongItem: "Napačen izdelek",
     reasonNotAsDescribed: "Izdelek ne ustreza opisu",
@@ -586,6 +755,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "Υπάρχει ήδη αίτημα επιστροφής για αυτή την παραγγελία.",
     orderNotFound: "Η παραγγελία δεν βρέθηκε.",
     enterBoth: "Εισάγετε τον αριθμό παραγγελίας και το email.",
+    catClaim: "Αξίωση",
+    catReturn: "Επιστροφή προϊόντος",
+    catExchange: "Ανταλλαγή προϊόντος",
+    claimWrongProduct: "Στάλθηκε λάθος προϊόν",
+    claimMissing: "Ελλιπές (μη παραδοθέν) προϊόν",
+    claimDamaged: "Κατεστραμμένο προϊόν",
+    claimLowQuality: "Προϊόν χαμηλής ποιότητας",
+    return14days: "Υπαναχώρηση εντός 14 ημερών",
+    return30days: "Επιστροφή εντός 30 ημερών",
+    return100days: "Επιστροφή εντός 100 ημερών",
+    exchangeLabel: "Ανταλλαγή προϊόντος",
+    exchangeProductCode: "Κωδικός νέου προϊόντος",
+    exchangeProductPrice: "Τιμή νέου προϊόντος",
+    exchangeQuantity: "Ποσότητα",
     reasonDamaged: "Κατεστραμμένο προϊόν",
     reasonWrongItem: "Λάθος προϊόν",
     reasonNotAsDescribed: "Δεν αντιστοιχεί στην περιγραφή",
@@ -626,6 +809,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "Esiste già una richiesta di reso per questo ordine.",
     orderNotFound: "Ordine non trovato.",
     enterBoth: "Inserisci il numero dell'ordine e l'email.",
+    catClaim: "Reclamo",
+    catReturn: "Reso prodotto",
+    catExchange: "Scambio prodotto",
+    claimWrongProduct: "Prodotto sbagliato spedito",
+    claimMissing: "Prodotto mancante (non consegnato)",
+    claimDamaged: "Prodotto danneggiato",
+    claimLowQuality: "Prodotto di bassa qualità",
+    return14days: "Recesso dal contratto entro 14 giorni",
+    return30days: "Reso entro 30 giorni",
+    return100days: "Reso entro 100 giorni",
+    exchangeLabel: "Scambio prodotto",
+    exchangeProductCode: "Codice nuovo prodotto",
+    exchangeProductPrice: "Prezzo nuovo prodotto",
+    exchangeQuantity: "Quantità",
     reasonDamaged: "Prodotto danneggiato",
     reasonWrongItem: "Prodotto sbagliato",
     reasonNotAsDescribed: "Non corrisponde alla descrizione",
@@ -666,6 +863,20 @@ const TRANSLATIONS: Record<string, Translations> = {
     existingReturn: "A return request already exists for this order.",
     orderNotFound: "Order not found.",
     enterBoth: "Enter the order number and email.",
+    catClaim: "Claim",
+    catReturn: "Return",
+    catExchange: "Exchange",
+    claimWrongProduct: "Wrong product shipped",
+    claimMissing: "Missing (undelivered) product",
+    claimDamaged: "Damaged product",
+    claimLowQuality: "Low quality product",
+    return14days: "Withdrawal within 14 days",
+    return30days: "Return within 30 days",
+    return100days: "Return within 100 days",
+    exchangeLabel: "Product exchange",
+    exchangeProductCode: "New product code",
+    exchangeProductPrice: "New product price",
+    exchangeQuantity: "Quantity",
     reasonDamaged: "Damaged product",
     reasonWrongItem: "Wrong item",
     reasonNotAsDescribed: "Not as described",
@@ -709,6 +920,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
   const slug = params.shop || "";
   const shopDomain = SHOP_SLUGS[slug];
 
+  const t = getTranslations(slug);
+
   if (!shopDomain) {
     return json({ error: "Store not found", step: "lookup" });
   }
@@ -719,7 +932,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     const email = (formData.get("email") as string || "").trim().toLowerCase();
 
     if (!orderNumber || !email) {
-      return json({ error: "Zadajte číslo objednávky aj email.", step: "lookup" });
+      return json({ error: t.enterBoth, step: "lookup" });
     }
 
     // Get Shopify admin API access
@@ -730,13 +943,9 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       });
 
       if (sessions.length === 0) {
-        return json({ error: `Store nie je pripojený. Žiadne sessions v databáze pre ${shopDomain}.`, step: "lookup" });
+        console.error(`No sessions found for ${shopDomain}`);
+        return json({ error: t.orderNotFound, step: "lookup" });
       }
-
-      // Show ALL sessions for debug
-      const allSessionsDebug = sessions.map(s =>
-        `[${s.id}] online=${s.isOnline} scope=${s.scope || 'none'} token=${s.accessToken ? s.accessToken.substring(0, 10) + '...' : 'NONE'} expires=${s.expires || 'never'}`
-      ).join(" || ");
 
       // Try EVERY session token until one works
       let workingSession: any = null;
@@ -764,10 +973,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       }
 
       if (!workingSession) {
-        return json({
-          error: `Žiadny token nefunguje! Sessions(${sessions.length}): ${allSessionsDebug}. Tried: ${triedTokens.join(", ")}`,
-          step: "lookup"
-        });
+        console.error(`No working token for ${shopDomain}. Tried: ${triedTokens.join(", ")}`);
+        return json({ error: t.orderNotFound, step: "lookup" });
       }
 
       const session = workingSession;
@@ -794,15 +1001,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       let order = data.orders?.[0];
 
       if (!order) {
-        // Debug: fetch last 5 orders to see what's available
-        const debugUrl = `https://${shopDomain}/admin/api/2025-04/orders.json?status=any&limit=5`;
-        const debugResp = await fetch(debugUrl, {
-          headers: { "X-Shopify-Access-Token": session.accessToken },
-        });
-        const debugData = await debugResp.json();
-        const recentNames = (debugData.orders || []).map((o: any) => `${o.name}(${o.id})`).join(", ");
         return json({
-          error: `Objednávka nebola nájdená. Total orders: ${totalOrders}. Posledné: ${recentNames || "žiadne"}. Session: ${session.id}`,
+          error: t.orderNotFound,
           step: "lookup"
         });
       }
@@ -810,7 +1010,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       // Verify email
       const orderEmail = (order.email || order.customer?.email || "").toLowerCase();
       if (orderEmail !== email) {
-        return json({ error: "Email sa nezhoduje s objednávkou.", step: "lookup" });
+        return json({ error: t.emailMismatch, step: "lookup" });
       }
 
       // Find already returned line items (from active returns)
@@ -891,7 +1091,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       });
     } catch (err: any) {
       console.error("Order lookup error:", err);
-      return json({ error: `Chyba pri vyhľadávaní: ${err.message || "Skúste znova."}`, step: "lookup" });
+      console.error("Order lookup error:", err);
+      return json({ error: t.orderNotFound, step: "lookup" });
     }
   }
 
@@ -903,6 +1104,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     const notes = JSON.parse(formData.get("notes") as string || "{}");
     const customerNotes = formData.get("customerNotes") as string || "";
     const customerIban = formData.get("customerIban") as string || "";
+    const exchangeData = JSON.parse(formData.get("exchangeData") as string || "{}");
     const photoMapping = JSON.parse(formData.get("photoMapping") as string || "{}");
 
     // Collect uploaded photos per item
@@ -925,12 +1127,34 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     }
 
     if (selectedItems.length === 0) {
-      return json({ error: "Vyberte aspoň jeden produkt na vrátenie.", step: "form", order: orderData });
+      return json({ error: t.selectAtLeastOne, step: "form", order: orderData });
     }
 
     // Build line items for the return
     const returnLineItems = selectedItems.map((itemId: string) => {
       const item = orderData.lineItems.find((li: any) => li.id === itemId);
+      const reasonCode = reasons[itemId] || "";
+      let note = notes[itemId] || "";
+
+      // Map reason code to readable label
+      const REASON_LABELS: Record<string, string> = {
+        claim_wrong_product: "Reklamácia: Nesprávny produkt",
+        claim_missing: "Reklamácia: Chýbajúci produkt",
+        claim_damaged: "Reklamácia: Poškodený produkt",
+        claim_low_quality: "Reklamácia: Nekvalitný produkt",
+        return_14days: "Vrátenie: Odstúpenie do 14 dní",
+        return_30days: "Vrátenie: Do 30 dní",
+        return_100days: "Vrátenie: Do 100 dní",
+        exchange_product: "Výmena tovaru",
+      };
+      const reasonLabel = REASON_LABELS[reasonCode] || reasonCode;
+
+      // Append exchange data to note if this is an exchange
+      const exchange = exchangeData[itemId];
+      if (exchange && reasonCode.startsWith("exchange_")) {
+        const exchangeInfo = `[VÝMENA] Kód: ${exchange.productCode || "—"}, Cena: ${exchange.productPrice || "—"}, Ks: ${exchange.quantity || "1"}`;
+        note = note ? `${note}\n${exchangeInfo}` : exchangeInfo;
+      }
       return {
         lineItemId: item.id,
         productTitle: item.title,
@@ -938,8 +1162,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         sku: item.sku,
         quantity: 1,
         pricePerItem: item.price,
-        reasonId: reasons[itemId] || undefined,
-        customerNote: notes[itemId] || undefined,
+        reasonId: null, // Reason stored as label in customerNote
+        customerNote: reasonLabel ? (note ? `${reasonLabel}\n${note}` : reasonLabel) : (note || undefined),
       };
     });
 
@@ -1020,6 +1244,7 @@ export default function ReturnsPortal() {
   const [itemReasons, setItemReasons] = useState<Record<string, string>>({});
   const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
   const [itemPhotos, setItemPhotos] = useState<Record<string, { file: File; preview: string }[]>>({});
+  const [itemExchange, setItemExchange] = useState<Record<string, { productCode: string; productPrice: string; quantity: string }>>({});
 
   if (loaderError) {
     return (
@@ -1129,6 +1354,8 @@ export default function ReturnsPortal() {
               setItemNotes={setItemNotes}
               itemPhotos={itemPhotos}
               setItemPhotos={setItemPhotos}
+              itemExchange={itemExchange}
+              setItemExchange={setItemExchange}
               t={t}
             />
           ) : (
@@ -1168,7 +1395,7 @@ export default function ReturnsPortal() {
   );
 }
 
-function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSelectedItems, itemReasons, setItemReasons, itemNotes, setItemNotes, itemPhotos, setItemPhotos, t }: any) {
+function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSelectedItems, itemReasons, setItemReasons, itemNotes, setItemNotes, itemPhotos, setItemPhotos, itemExchange, setItemExchange, t }: any) {
   const toggleItem = (itemId: string) => {
     setSelectedItems((prev: string[]) =>
       prev.includes(itemId) ? prev.filter((id: string) => id !== itemId) : [...prev, itemId]
@@ -1189,6 +1416,7 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
         <input type="hidden" name="selectedItems" value={JSON.stringify(selectedItems)} />
         <input type="hidden" name="reasons" value={JSON.stringify(itemReasons)} />
         <input type="hidden" name="notes" value={JSON.stringify(itemNotes)} />
+        <input type="hidden" name="exchangeData" value={JSON.stringify(itemExchange)} />
         <input type="hidden" name="photoMapping" value={JSON.stringify(
           Object.fromEntries(
             Object.entries(itemPhotos).map(([itemId, photos]: [string, any[]]) => [
@@ -1242,25 +1470,72 @@ function ReturnForm({ order, reasons, error, isSubmitting, selectedItems, setSel
                   <label style={{ fontSize: 13, fontWeight: 600 }}>{t.returnReason}</label>
                   <select
                     value={itemReasons[item.id] || ""}
-                    onChange={(e) => setItemReasons((prev: any) => ({ ...prev, [item.id]: e.target.value }))}
+                    onChange={(e) => {
+                      setItemReasons((prev: any) => ({ ...prev, [item.id]: e.target.value }));
+                      // Clear exchange data if not exchange
+                      if (!e.target.value.startsWith("exchange_")) {
+                        setItemExchange((prev) => { const n = { ...prev }; delete n[item.id]; return n; });
+                      } else if (!itemExchange[item.id]) {
+                        setItemExchange((prev) => ({ ...prev, [item.id]: { productCode: "", productPrice: "", quantity: "1" } }));
+                      }
+                    }}
                     style={{ width: "100%", padding: 10, borderRadius: 6, border: "1px solid #ddd", fontSize: 14 }}
                   >
                     <option value="">{t.selectReason}</option>
-                    {reasons.length > 0 ? (
-                      reasons.map((r: any) => (
-                        <option key={r.id} value={r.id}>{r.label}</option>
-                      ))
-                    ) : (
-                      <>
-                        <option value="damaged">{t.reasonDamaged}</option>
-                        <option value="wrong_item">{t.reasonWrongItem}</option>
-                        <option value="not_as_described">{t.reasonNotAsDescribed}</option>
-                        <option value="changed_mind">{t.reasonChangedMind}</option>
-                        <option value="defective">{t.reasonDefective}</option>
-                        <option value="other">{t.reasonOther}</option>
-                      </>
-                    )}
+                    <optgroup label={`── ${t.catClaim} ──`}>
+                      <option value="claim_wrong_product">{t.claimWrongProduct}</option>
+                      <option value="claim_missing">{t.claimMissing}</option>
+                      <option value="claim_damaged">{t.claimDamaged}</option>
+                      <option value="claim_low_quality">{t.claimLowQuality}</option>
+                    </optgroup>
+                    <optgroup label={`── ${t.catReturn} ──`}>
+                      <option value="return_14days">{t.return14days}</option>
+                      <option value="return_30days">{t.return30days}</option>
+                      <option value="return_100days">{t.return100days}</option>
+                    </optgroup>
+                    <optgroup label={`── ${t.catExchange} ──`}>
+                      <option value="exchange_product">{t.exchangeLabel}</option>
+                    </optgroup>
                   </select>
+
+                  {/* Exchange fields */}
+                  {(itemReasons[item.id] || "").startsWith("exchange_") && (
+                    <div style={{ marginTop: 10, padding: 12, background: "#f0f9ff", borderRadius: 8, border: "1px solid #bae6fd" }}>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 80px", gap: 8 }}>
+                        <div>
+                          <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{t.exchangeProductCode}</label>
+                          <input
+                            type="text"
+                            value={itemExchange[item.id]?.productCode || ""}
+                            onChange={(e) => setItemExchange((prev) => ({ ...prev, [item.id]: { ...prev[item.id], productCode: e.target.value } }))}
+                            placeholder="SKU / kód"
+                            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ddd", fontSize: 13 }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{t.exchangeProductPrice}</label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={itemExchange[item.id]?.productPrice || ""}
+                            onChange={(e) => setItemExchange((prev) => ({ ...prev, [item.id]: { ...prev[item.id], productPrice: e.target.value } }))}
+                            placeholder="0.00"
+                            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ddd", fontSize: 13 }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: 12, fontWeight: 600, display: "block", marginBottom: 4 }}>{t.exchangeQuantity}</label>
+                          <input
+                            type="number"
+                            min="1"
+                            value={itemExchange[item.id]?.quantity || "1"}
+                            onChange={(e) => setItemExchange((prev) => ({ ...prev, [item.id]: { ...prev[item.id], quantity: e.target.value } }))}
+                            style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #ddd", fontSize: 13 }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   <label style={{ fontSize: 13, fontWeight: 600, marginTop: 8, display: "block" }}>{t.descriptionOptional}</label>
                   <textarea
                     value={itemNotes[item.id] || ""}

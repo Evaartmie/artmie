@@ -84,7 +84,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       updatedAt: r.updatedAt.toISOString(),
       itemCount: r.lineItems.length,
       productNames: r.lineItems.map(li => li.productTitle).join(", "),
-      reasons: [...new Set(r.lineItems.map(li => li.reason?.label).filter(Boolean))].join(", "),
+      reasons: [...new Set(r.lineItems.map(li => li.reason?.label || li.customerNote?.split("\n")[0] || "").filter(Boolean))].join(", "),
     })),
     shops,
     statuses,

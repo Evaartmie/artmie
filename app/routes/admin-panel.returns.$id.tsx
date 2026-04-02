@@ -175,11 +175,11 @@ export default function AdminReturnDetail() {
                     {li.sku && <div style={{ fontSize: 12, color: "#9ca3af" }}>SKU: {li.sku}</div>}
                     <div style={{ marginTop: 6 }}>
                       <span style={{ fontSize: 13, fontWeight: 500, color: "#dc2626" }}>
-                        Dôvod: {li.reason?.label || "Nezadaný"}
+                        Dôvod: {li.reason?.label || (li.customerNote?.split("\n")[0]) || "Nezadaný"}
                       </span>
                     </div>
                     {li.customerNote && (
-                      <div style={{ marginTop: 4, fontSize: 13, color: "#374151", background: "#f9fafb", padding: "6px 10px", borderRadius: 6, borderLeft: "3px solid #6366f1" }}>
+                      <div style={{ marginTop: 4, fontSize: 13, color: "#374151", background: "#f9fafb", padding: "6px 10px", borderRadius: 6, borderLeft: "3px solid #6366f1", whiteSpace: "pre-line" }}>
                         {li.customerNote}
                       </div>
                     )}
