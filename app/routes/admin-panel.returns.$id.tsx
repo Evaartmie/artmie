@@ -4,6 +4,8 @@ import { useLoaderData, Form, useNavigation, useNavigate } from "@remix-run/reac
 import { useState } from "react";
 import { requireAdminAuth, getStoreName, getStoreBrand } from "../utils/admin-auth.server";
 import { prisma } from "../db.server";
+import { getCarriersForShop, getCountryForShop, generateReturnLabel, RETURN_ADDRESS } from "../lib/carriers.server";
+import type { CarrierCode } from "../lib/carriers.server";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Čakajúce",
@@ -33,6 +35,10 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
     throw new Response("Return not found", { status: 404 });
   }
 
+  // Get available carriers for this shop's country
+  const carriers = getCarriersForShop(returnRequest.shop);
+  const shopCountry = getCountryForShop(returnRequest.shop);
+
   return json({
     ret: {
       ...returnRequest,
@@ -50,6 +56,8 @@ export const loader = async ({ request, params }: LoaderFunctionArgs) => {
         createdAt: h.createdAt.toISOString(),
       })),
     },
+    carriers: carriers.map(c => ({ code: c.code, name: c.name, logo: c.logo, apiConfigured: c.apiConfigured })),
+    shopCountry,
   });
 };
 
@@ -148,19 +156,97 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       await prisma.returnRequest.update({ where: { id }, data: { adminNotes: note } });
       break;
     }
+    case "generate-label": {
+      const carrierCode = formData.get("carrier") as CarrierCode;
+      const weight = parseFloat(formData.get("weight") as string || "1");
+
+      const result = await generateReturnLabel(carrierCode, {
+        senderName: returnRequest.customerName,
+        senderStreet: "", // Customer address would come from Shopify order
+        senderCity: "",
+        senderZip: "",
+        senderCountry: getCountryForShop(returnRequest.shop),
+        senderPhone: "",
+        senderEmail: returnRequest.customerEmail,
+        weight,
+        reference: returnRequest.shopifyOrderName,
+        note: `Return: ${returnRequest.shopifyOrderName}`,
+      });
+
+      if (result.success && result.trackingNumber) {
+        await prisma.$transaction([
+          prisma.returnRequest.update({
+            where: { id },
+            data: {
+              status: "in_transit",
+              trackingNumber: result.trackingNumber,
+              trackingUrl: result.trackingUrl || null,
+              shippingCarrier: carrierCode,
+            },
+          }),
+          prisma.returnStatusHistory.create({
+            data: {
+              returnRequestId: id!,
+              fromStatus: returnRequest.status,
+              toStatus: "in_transit",
+              changedBy: "admin-panel",
+              note: `Štítok vygenerovaný: ${carrierCode} / ${result.trackingNumber}`,
+            },
+          }),
+        ]);
+      } else {
+        // Save error to admin notes so user sees it
+        const errorNote = `[ŠTÍTOK CHYBA] ${result.error || "Neznáma chyba"}`;
+        const existing = returnRequest.adminNotes || "";
+        await prisma.returnRequest.update({
+          where: { id },
+          data: { adminNotes: existing ? `${existing}\n${errorNote}` : errorNote },
+        });
+      }
+      break;
+    }
+    case "save-tracking": {
+      const trackingNumber = formData.get("trackingNumber") as string || "";
+      const carrier = formData.get("trackingCarrier") as string || "";
+      const trackingUrl = formData.get("trackingUrl") as string || "";
+      await prisma.$transaction([
+        prisma.returnRequest.update({
+          where: { id },
+          data: {
+            trackingNumber: trackingNumber || null,
+            trackingUrl: trackingUrl || null,
+            shippingCarrier: carrier || null,
+            status: trackingNumber ? "in_transit" : returnRequest.status,
+          },
+        }),
+        ...(trackingNumber && returnRequest.status !== "in_transit" ? [
+          prisma.returnStatusHistory.create({
+            data: {
+              returnRequestId: id!,
+              fromStatus: returnRequest.status,
+              toStatus: "in_transit",
+              changedBy: "admin-panel",
+              note: `Tracking: ${trackingNumber} (${carrier || "manuálne"})`,
+            },
+          }),
+        ] : []),
+      ]);
+      break;
+    }
   }
 
   return redirect(`/admin-panel/returns/${id}`);
 };
 
 export default function AdminReturnDetail() {
-  const { ret } = useLoaderData<typeof loader>();
+  const { ret, carriers, shopCountry } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const navigate = useNavigate();
   const isSubmitting = navigation.state === "submitting";
 
   const [approveResolution, setApproveResolution] = useState("send_product");
   const [approveCreditNote, setApproveCreditNote] = useState("no");
+  const [showManualTracking, setShowManualTracking] = useState(false);
 
   const totalValue = ret.lineItems.reduce((sum, li) => sum + li.pricePerItem * li.quantity, 0);
   const canApprove = ret.status === "pending";
@@ -377,6 +463,97 @@ export default function AdminReturnDetail() {
             )}
             {(ret.status === "refunded" || ret.status === "closed" || ret.status === "cancelled") && (
               <div style={{ textAlign: "center", padding: 12, color: "#9ca3af", fontSize: 13 }}>Žiadne dostupné akcie</div>
+            )}
+          </div>
+
+          {/* Shipping / Label section */}
+          <div className="card" style={{ marginBottom: 16 }}>
+            <h3 style={{ marginBottom: 12 }}>Preprava</h3>
+
+            {/* Show existing tracking info */}
+            {ret.trackingNumber && (
+              <div style={{ padding: 12, background: "#f0fdf4", borderRadius: 8, border: "1px solid #bbf7d0", marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 4 }}>Tracking</div>
+                <div style={{ fontWeight: 600, fontFamily: "monospace", fontSize: 14 }}>
+                  {ret.trackingNumber}
+                </div>
+                {ret.shippingCarrier && (
+                  <div style={{ fontSize: 12, color: "#6b7280", marginTop: 4 }}>
+                    Dopravca: {ret.shippingCarrier}
+                  </div>
+                )}
+                {ret.trackingUrl && (
+                  <a href={ret.trackingUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: 13, color: "#6366f1", marginTop: 6, display: "inline-block" }}>
+                    Sledovať zásielku →
+                  </a>
+                )}
+              </div>
+            )}
+
+            {/* Generate label - only for approved/pending returns */}
+            {["approved", "pending"].includes(ret.status) && !ret.trackingNumber && (
+              <>
+                <div style={{ fontSize: 12, color: "#6b7280", marginBottom: 8 }}>
+                  Krajina: <strong>{shopCountry}</strong> · {carriers.length} dopravcov
+                </div>
+
+                <Form method="post" style={{ marginBottom: 10 }}>
+                  <input type="hidden" name="intent" value="generate-label" />
+                  <div style={{ marginBottom: 8 }}>
+                    <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Dopravca</label>
+                    <select name="carrier" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
+                      {carriers.map((c: any) => (
+                        <option key={c.code} value={c.code}>
+                          {c.logo} {c.name} {c.apiConfigured ? "✓" : "(nie je API)"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div style={{ marginBottom: 8 }}>
+                    <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Váha (kg)</label>
+                    <input type="number" name="weight" defaultValue="1" step="0.1" min="0.1" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                  </div>
+                  <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#0ea5e9", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
+                    🏷️ Vygenerovať štítok
+                  </button>
+                </Form>
+
+                {/* Manual tracking entry */}
+                <button
+                  type="button"
+                  onClick={() => setShowManualTracking(!showManualTracking)}
+                  style={{ width: "100%", padding: "8px 12px", background: "none", border: "1px dashed #d1d5db", borderRadius: 6, cursor: "pointer", fontSize: 12, color: "#6b7280", marginBottom: showManualTracking ? 8 : 0 }}
+                >
+                  {showManualTracking ? "▲ Skryť" : "✏️ Zadať tracking manuálne"}
+                </button>
+
+                {showManualTracking && (
+                  <Form method="post" style={{ marginTop: 8, padding: 12, background: "#f9fafb", borderRadius: 8 }}>
+                    <input type="hidden" name="intent" value="save-tracking" />
+                    <div style={{ marginBottom: 6 }}>
+                      <input type="text" name="trackingNumber" placeholder="Tracking číslo" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                    </div>
+                    <div style={{ marginBottom: 6 }}>
+                      <input type="text" name="trackingCarrier" placeholder="Dopravca (napr. GLS, SPS)" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                    </div>
+                    <div style={{ marginBottom: 6 }}>
+                      <input type="text" name="trackingUrl" placeholder="Tracking URL (voliteľné)" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                    </div>
+                    <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "8px 14px", background: "#374151", color: "white", border: "none", borderRadius: 6, fontWeight: 500, cursor: "pointer", fontSize: 13 }}>
+                      Uložiť tracking
+                    </button>
+                  </Form>
+                )}
+              </>
+            )}
+
+            {/* No shipping actions for these statuses */}
+            {!["approved", "pending"].includes(ret.status) && !ret.trackingNumber && (
+              <div style={{ textAlign: "center", padding: 8, color: "#9ca3af", fontSize: 12 }}>
+                {ret.status === "rejected" || ret.status === "cancelled"
+                  ? "Zásielka nie je potrebná"
+                  : "Žiadne tracking info"}
+              </div>
             )}
           </div>
 
