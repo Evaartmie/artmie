@@ -139,9 +139,7 @@ export default function AdminReturnDetail() {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: 24, alignItems: "start" }}>
-        {/* Left column */}
         <div>
-          {/* Customer info */}
           <div className="card" style={{ marginBottom: 16 }}>
             <h3 style={{ marginBottom: 12 }}>Zákazník</h3>
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -166,7 +164,6 @@ export default function AdminReturnDetail() {
             </div>
           </div>
 
-          {/* Products */}
           <div className="card" style={{ marginBottom: 16 }}>
             <h3 style={{ marginBottom: 12 }}>Produkty ({ret.lineItems.length})</h3>
             {ret.lineItems.map((li) => (
@@ -196,7 +193,6 @@ export default function AdminReturnDetail() {
             ))}
           </div>
 
-          {/* Customer notes */}
           {ret.customerNotes && (
             <div className="card" style={{ marginBottom: 16 }}>
               <h3 style={{ marginBottom: 8 }}>Poznámka zákazníka</h3>
@@ -206,18 +202,13 @@ export default function AdminReturnDetail() {
             </div>
           )}
 
-          {/* Photos */}
           {ret.photos.length > 0 && (
             <div className="card" style={{ marginBottom: 16 }}>
               <h3 style={{ marginBottom: 12 }}>Fotky ({ret.photos.length})</h3>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
                 {ret.photos.map((photo) => (
                   <a key={photo.id} href={photo.fileUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
-                    <img
-                      src={photo.fileUrl}
-                      alt={photo.fileName}
-                      style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb", cursor: "pointer" }}
-                    />
+                    <img src={photo.fileUrl} alt={photo.fileName} style={{ width: 160, height: 160, objectFit: "cover", borderRadius: 8, border: "1px solid #e5e7eb", cursor: "pointer" }} />
                     <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 4, textAlign: "center" }}>
                       {photo.fileName} ({photo.fileSize ? `${(photo.fileSize / 1024).toFixed(0)} KB` : ""})
                     </div>
@@ -227,7 +218,6 @@ export default function AdminReturnDetail() {
             </div>
           )}
 
-          {/* Timeline */}
           <div className="card">
             <h3 style={{ marginBottom: 12 }}>História</h3>
             {ret.statusHistory.map((h) => (
@@ -237,10 +227,7 @@ export default function AdminReturnDetail() {
                 </div>
                 <div>
                   {h.fromStatus && (
-                    <>
-                      <span className={`badge badge-${h.fromStatus}`} style={{ fontSize: 11 }}>{STATUS_LABELS[h.fromStatus] || h.fromStatus}</span>
-                      {" → "}
-                    </>
+                    <><span className={`badge badge-${h.fromStatus}`} style={{ fontSize: 11 }}>{STATUS_LABELS[h.fromStatus] || h.fromStatus}</span>{" → "}</>
                   )}
                   <span className={`badge badge-${h.toStatus}`} style={{ fontSize: 11 }}>{STATUS_LABELS[h.toStatus] || h.toStatus}</span>
                   {h.note && <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>{h.note}</div>}
@@ -251,40 +238,28 @@ export default function AdminReturnDetail() {
           </div>
         </div>
 
-        {/* Right column - Actions */}
         <div>
-          {/* Actions */}
           <div className="card" style={{ marginBottom: 16 }}>
             <h3 style={{ marginBottom: 12 }}>Akcie</h3>
-
             {canApprove && (
               <Form method="post" style={{ marginBottom: 8 }}>
                 <input type="hidden" name="intent" value="approve" />
-                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#22c55e", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
-                  ✓ Schváliť
-                </button>
+                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#22c55e", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>✓ Schváliť</button>
               </Form>
             )}
-
             {canReject && (
               <Form method="post" style={{ marginBottom: 8 }}>
                 <input type="hidden" name="intent" value="reject" />
                 <textarea name="rejectReason" placeholder="Dôvod zamietnutia..." rows={2} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", marginBottom: 6, fontSize: 13 }} />
-                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#ef4444", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
-                  ✕ Zamietnuť
-                </button>
+                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#ef4444", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>✕ Zamietnuť</button>
               </Form>
             )}
-
             {canMarkReceived && (
               <Form method="post" style={{ marginBottom: 8 }}>
                 <input type="hidden" name="intent" value="mark-received" />
-                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#3b82f6", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
-                  📦 Tovar prijatý
-                </button>
+                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#3b82f6", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>Tovar prijatý</button>
               </Form>
             )}
-
             {canRefund && (
               <Form method="post" style={{ marginBottom: 8 }}>
                 <input type="hidden" name="intent" value="refund" />
@@ -292,37 +267,26 @@ export default function AdminReturnDetail() {
                   <label style={{ fontSize: 12, color: "#6b7280" }}>Suma refundácie</label>
                   <input type="number" name="refundAmount" defaultValue={totalValue.toFixed(2)} step="0.01" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 14 }} />
                 </div>
-                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#8b5cf6", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
-                  💰 Refundovať
-                </button>
+                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#8b5cf6", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>Refundovať</button>
               </Form>
             )}
-
             {canClose && (
               <Form method="post">
                 <input type="hidden" name="intent" value="close" />
-                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#6b7280", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14, marginTop: 8 }}>
-                  Uzavrieť
-                </button>
+                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#6b7280", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14, marginTop: 8 }}>Uzavrieť</button>
               </Form>
             )}
-
             {(ret.status === "refunded" || ret.status === "closed" || ret.status === "cancelled") && (
-              <div style={{ textAlign: "center", padding: 12, color: "#9ca3af", fontSize: 13 }}>
-                Žiadne dostupné akcie
-              </div>
+              <div style={{ textAlign: "center", padding: 12, color: "#9ca3af", fontSize: 13 }}>Žiadne dostupné akcie</div>
             )}
           </div>
 
-          {/* Admin notes */}
           <div className="card">
             <h3 style={{ marginBottom: 8 }}>Interné poznámky</h3>
             <Form method="post">
               <input type="hidden" name="intent" value="save-note" />
               <textarea name="adminNotes" defaultValue={ret.adminNotes || ""} rows={4} placeholder="Interné poznámky..." style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13, marginBottom: 8 }} />
-              <button type="submit" disabled={isSubmitting} style={{ padding: "8px 16px", background: "#f3f4f6", border: "1px solid #e5e7eb", borderRadius: 6, cursor: "pointer", fontSize: 13 }}>
-                Uložiť poznámku
-              </button>
+              <button type="submit" disabled={isSubmitting} style={{ padding: "8px 16px", background: "#f3f4f6", border: "1px solid #e5e7eb", borderRadius: 6, cursor: "pointer", fontSize: 13 }}>Uložiť poznámku</button>
             </Form>
           </div>
         </div>
