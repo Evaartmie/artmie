@@ -8,6 +8,7 @@ import {
   IndexTable,
   Text,
   Badge,
+  BlockStack,
   Filters,
   ChoiceList,
   Pagination,
@@ -182,43 +183,61 @@ export default function ReturnsListPage() {
     plural: "returns",
   };
 
-  const rowMarkup = returns.map((returnReq, index) => (
-    <IndexTable.Row
-      id={returnReq.id}
-      key={returnReq.id}
-      position={index}
-      onClick={() => navigate(`/app/returns/${returnReq.id}`)}
-    >
-      <IndexTable.Cell>
-        <Text as="span" variant="bodyMd" fontWeight="bold">
-          {returnReq.shopifyOrderName}
-        </Text>
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <Text as="span" variant="bodyMd">
-          {returnReq.customerName}
-        </Text>
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <Text as="span" variant="bodySm">
-          {returnReq.customerEmail}
-        </Text>
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <Text as="span" variant="bodySm">
-          {returnReq.lineItems.length} item{returnReq.lineItems.length !== 1 ? "s" : ""}
-        </Text>
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <ReturnStatusBadge status={returnReq.status} />
-      </IndexTable.Cell>
-      <IndexTable.Cell>
-        <Text as="span" variant="bodySm" tone="subdued">
-          {new Date(returnReq.createdAt).toLocaleDateString()}
-        </Text>
-      </IndexTable.Cell>
-    </IndexTable.Row>
-  ));
+  const rowMarkup = returns.map((returnReq, index) => {
+    const totalValue = returnReq.lineItems.reduce(
+      (sum, item) => sum + item.pricePerItem * item.quantity, 0
+    );
+    const productNames = returnReq.lineItems.map(item => item.productTitle).join(", ");
+    const reasons = [...new Set(returnReq.lineItems.map(item => item.reason?.label).filter(Boolean))].join(", ");
+
+    return (
+      <IndexTable.Row
+        id={returnReq.id}
+        key={returnReq.id}
+        position={index}
+        onClick={() => navigate(`/app/returns/${returnReq.id}`)}
+      >
+        <IndexTable.Cell>
+          <BlockStack gap="050">
+            <Text as="span" variant="bodyMd" fontWeight="bold">
+              {returnReq.shopifyOrderName}
+            </Text>
+            <Text as="span" variant="bodySm" tone="subdued">
+              {new Date(returnReq.createdAt).toLocaleDateString()}
+            </Text>
+          </BlockStack>
+        </IndexTable.Cell>
+        <IndexTable.Cell>
+          <BlockStack gap="050">
+            <Text as="span" variant="bodyMd">
+              {returnReq.customerName}
+            </Text>
+            <Text as="span" variant="bodySm" tone="subdued">
+              {returnReq.customerEmail}
+            </Text>
+          </BlockStack>
+        </IndexTable.Cell>
+        <IndexTable.Cell>
+          <BlockStack gap="050">
+            <Text as="span" variant="bodySm">
+              {productNames.length > 60 ? productNames.substring(0, 57) + "..." : productNames}
+            </Text>
+            <Text as="span" variant="bodySm" tone="subdued">
+              {returnReq.lineItems.length} item{returnReq.lineItems.length !== 1 ? "s" : ""} · {totalValue.toFixed(2)} {returnReq.currency}
+            </Text>
+          </BlockStack>
+        </IndexTable.Cell>
+        <IndexTable.Cell>
+          <Text as="span" variant="bodySm">
+            {reasons || "—"}
+          </Text>
+        </IndexTable.Cell>
+        <IndexTable.Cell>
+          <ReturnStatusBadge status={returnReq.status} />
+        </IndexTable.Cell>
+      </IndexTable.Row>
+    );
+  });
 
   return (
     <Page
@@ -254,12 +273,11 @@ export default function ReturnsListPage() {
                   resourceName={resourceName}
                   itemCount={returns.length}
                   headings={[
-                    { title: "Order" },
+                    { title: "Order / Date" },
                     { title: "Customer" },
-                    { title: "Email" },
-                    { title: "Items" },
+                    { title: "Products / Value" },
+                    { title: "Reason" },
                     { title: "Status" },
-                    { title: "Date" },
                   ]}
                   selectable={false}
                 >

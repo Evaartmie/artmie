@@ -8,6 +8,7 @@ import {
   Text,
   BlockStack,
   InlineStack,
+  Box,
   Badge,
   Button,
   TextField,
@@ -499,16 +500,30 @@ export default function ReturnDetailPage() {
             </BlockStack>
           </Card>
 
-          {/* Customer Notes */}
-          {returnRequest.customerNotes && (
+          {/* Customer IBAN & Notes */}
+          {(returnRequest.customerIban || returnRequest.customerNotes) && (
             <Card>
-              <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">
-                  Customer Notes
-                </Text>
-                <Text as="p" variant="bodyMd">
-                  {returnRequest.customerNotes}
-                </Text>
+              <BlockStack gap="300">
+                {returnRequest.customerIban && (
+                  <BlockStack gap="100">
+                    <Text as="h2" variant="headingMd">
+                      IBAN for Refund
+                    </Text>
+                    <Text as="p" variant="bodyMd" fontWeight="bold">
+                      {returnRequest.customerIban}
+                    </Text>
+                  </BlockStack>
+                )}
+                {returnRequest.customerNotes && (
+                  <BlockStack gap="100">
+                    <Text as="h2" variant="headingMd">
+                      Customer Notes
+                    </Text>
+                    <Text as="p" variant="bodyMd">
+                      {returnRequest.customerNotes}
+                    </Text>
+                  </BlockStack>
+                )}
               </BlockStack>
             </Card>
           )}
