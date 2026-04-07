@@ -108,6 +108,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       } else if (resolution === "voucher") {
         noteParts.push(`Riešenie: Voucher${voucherAmount ? ` ${voucherAmount} ${returnRequest.currency}` : ""}`);
         if (voucherCode) noteParts.push(`Kód: ${voucherCode}`);
+      } else if (resolution === "next_order") {
+        noteParts.push(`Riešenie: Posielame pri nasledujúcej objednávke`);
       }
       if (resolutionNote) noteParts.push(`Pozn: ${resolutionNote}`);
       if (creditNote === "yes") {
@@ -125,6 +127,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       } else if (resolution === "voucher") {
         adminDetails.push(`[SCHVÁLENIE] Riešenie voucherom${voucherAmount ? ` — hodnota: ${voucherAmount} ${returnRequest.currency}` : ""}`);
         if (voucherCode) adminDetails.push(`Kód voucheru: ${voucherCode}`);
+      } else if (resolution === "next_order") {
+        adminDetails.push(`[SCHVÁLENIE] Posielame pri nasledujúcej objednávke`);
       }
       if (resolutionNote) adminDetails.push(`Poznámka: ${resolutionNote}`);
       if (creditNote === "yes") {
@@ -511,6 +515,10 @@ export default function AdminReturnDetail() {
                       <input type="radio" name="resolution" value="voucher" checked={approveResolution === "voucher"} onChange={() => setApproveResolution("voucher")} style={{ accentColor: "#eab308" }} />
                       <span style={{ fontWeight: 500 }}>🎟️ Riešenie voucherom</span>
                     </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", padding: "8px 10px", background: approveResolution === "next_order" ? "#fdf4ff" : "#f9fafb", border: `1px solid ${approveResolution === "next_order" ? "#e879f9" : "#e5e7eb"}`, borderRadius: 6 }}>
+                      <input type="radio" name="resolution" value="next_order" checked={approveResolution === "next_order"} onChange={() => setApproveResolution("next_order")} style={{ accentColor: "#a855f7" }} />
+                      <span style={{ fontWeight: 500 }}>🚚 Posielame pri nasledujúcej objednávke</span>
+                    </label>
                   </div>
                 </div>
 
@@ -545,6 +553,15 @@ export default function AdminReturnDetail() {
                         <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Číslo voucheru / kód</label>
                         <input type="text" name="voucherCode" placeholder="napr. VCH-2026-001" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Next order info */}
+                {approveResolution === "next_order" && (
+                  <div style={{ marginBottom: 10, padding: 10, background: "#fdf4ff", borderRadius: 8, border: "1px solid #e879f9" }}>
+                    <div style={{ fontSize: 12, color: "#86198f", fontWeight: 600 }}>
+                      Tovar bude pribalený k nasledujúcej objednávke zákazníka
                     </div>
                   </div>
                 )}

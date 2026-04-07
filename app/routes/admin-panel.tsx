@@ -14,18 +14,28 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   if (isAuthenticated) {
     try {
       counts.pending = await prisma.returnRequest.count({ where: { status: "pending" } });
-      // Count by type from line items
+      // Count by type from line items + request-level customerNotes
       const allReturns = await prisma.returnRequest.findMany({
         where: { status: { notIn: ["finished", "cancelled", "closed"] } },
-        include: { lineItems: { select: { customerNote: true } } },
+        select: { customerNotes: true, lineItems: { select: { customerNote: true } } },
       });
       for (const r of allReturns) {
+        // Collect all notes: from lineItems + from ReturnRequest.customerNotes
+        const allNotes: string[] = [];
         for (const li of r.lineItems) {
-          const note = (li.customerNote?.split("\n")[0] || "").toLowerCase();
-          if (note.startsWith("reklamácia") || note.includes("defective") || note.includes("damaged") || note.includes("wrong") || note.includes("missing")) { counts.claims++; break; }
-          if (note.startsWith("vrátenie") || note.includes("does not fit") || note.includes("changed mind") || note.includes("not as described")) { counts.returns++; break; }
-          if (note.startsWith("výmena") || note.includes("exchange")) { counts.exchanges++; break; }
+          if (li.customerNote) allNotes.push(li.customerNote.split("\n")[0]);
         }
+        if (r.customerNotes) allNotes.push(r.customerNotes.split("\n")[0]);
+
+        let classified = false;
+        for (const rawNote of allNotes) {
+          const note = rawNote.toLowerCase();
+          if (note.startsWith("reklamácia") || note.includes("defective") || note.includes("damaged") || note.includes("wrong") || note.includes("missing") || note.includes("nekvalitný") || note.includes("poškodený")) { counts.claims++; classified = true; break; }
+          if (note.startsWith("vrátenie") || note.includes("does not fit") || note.includes("changed mind") || note.includes("not as described") || note.includes("odstúpenie")) { counts.returns++; classified = true; break; }
+          if (note.startsWith("výmena") || note.includes("exchange")) { counts.exchanges++; classified = true; break; }
+        }
+        // If no type detected but return is active, count as return (default)
+        if (!classified) { counts.returns++; }
       }
     } catch (e) { /* ignore if DB not ready */ }
   }
