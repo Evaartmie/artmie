@@ -86,18 +86,18 @@ export default function AdminPanelLayout() {
                 Na riešenie
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 10px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.claims > 0 ? "rgba(239,68,68,0.15)" : "transparent" }}>
+                <Link to="/admin-panel/returns?type=claim" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.claims > 0 ? "rgba(239,68,68,0.15)" : "transparent", textDecoration: "none", transition: "background 0.15s" }}>
                   <span style={{ fontSize: 13, color: counts.claims > 0 ? "#fca5a5" : "rgba(255,255,255,0.4)" }}>Reklamácie</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: counts.claims > 0 ? "#fca5a5" : "rgba(255,255,255,0.3)" }}>{counts.claims}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.returns > 0 ? "rgba(59,130,246,0.15)" : "transparent" }}>
+                </Link>
+                <Link to="/admin-panel/returns?type=return" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.returns > 0 ? "rgba(59,130,246,0.15)" : "transparent", textDecoration: "none", transition: "background 0.15s" }}>
                   <span style={{ fontSize: 13, color: counts.returns > 0 ? "#93c5fd" : "rgba(255,255,255,0.4)" }}>Vrátenia</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: counts.returns > 0 ? "#93c5fd" : "rgba(255,255,255,0.3)" }}>{counts.returns}</span>
-                </div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.exchanges > 0 ? "rgba(234,179,8,0.15)" : "transparent" }}>
+                </Link>
+                <Link to="/admin-panel/returns?type=exchange" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.exchanges > 0 ? "rgba(234,179,8,0.15)" : "transparent", textDecoration: "none", transition: "background 0.15s" }}>
                   <span style={{ fontSize: 13, color: counts.exchanges > 0 ? "#fde047" : "rgba(255,255,255,0.4)" }}>Výmeny</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: counts.exchanges > 0 ? "#fde047" : "rgba(255,255,255,0.3)" }}>{counts.exchanges}</span>
-                </div>
+                </Link>
               </div>
             </div>
           </nav>

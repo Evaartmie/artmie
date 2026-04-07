@@ -42,6 +42,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const statusFilter = url.searchParams.get("status") || "all";
   const brandFilter = url.searchParams.get("brand") || "all";
   const reasonFilter = url.searchParams.get("reasons") || "all"; // comma-separated reason keys
+  const typeFilter = url.searchParams.get("type") || "all"; // claim, return, exchange
   const page = parseInt(url.searchParams.get("page") || "1");
   const perPage = 50;
 
@@ -67,16 +68,51 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     where.status = statusFilter;
   }
 
+  // Type filter - filter by return type (claim/return/exchange) based on customerNote prefixes
+  if (typeFilter !== "all") {
+    const typeReasonPrefixes: Record<string, string[]> = {
+      claim: ["Reklamácia"],
+      return: ["Vrátenie"],
+      exchange: ["Výmena"],
+    };
+    // Also match English/legacy keywords
+    const typeKeywords: Record<string, string[]> = {
+      claim: ["defective", "damaged", "wrong", "missing", "low quality", "nekvalitný", "poškodený", "nesprávny", "chýbajúci"],
+      return: ["does not fit", "changed mind", "not as described", "odstúpenie"],
+      exchange: ["exchange", "výmena"],
+    };
+    const prefixes = typeReasonPrefixes[typeFilter] || [];
+    const keywords = typeKeywords[typeFilter] || [];
+    where.lineItems = {
+      some: {
+        OR: [
+          ...prefixes.map((p: string) => ({ customerNote: { startsWith: p } })),
+          ...keywords.map((k: string) => ({ customerNote: { contains: k } })),
+        ],
+      },
+    };
+  }
+
   // Reason filter - filter returns that have lineItems with matching customerNote prefix
   const selectedReasons = reasonFilter !== "all" ? reasonFilter.split(",") : [];
   if (selectedReasons.length > 0) {
-    where.lineItems = {
-      some: {
-        OR: selectedReasons.map((r: string) => ({
-          customerNote: { startsWith: r },
-        })),
-      },
-    };
+    // If type filter already set lineItems, merge with AND
+    if (where.lineItems) {
+      const typeCondition = where.lineItems;
+      where.AND = [
+        { lineItems: typeCondition },
+        { lineItems: { some: { OR: selectedReasons.map((r: string) => ({ customerNote: { startsWith: r } })) } } },
+      ];
+      delete where.lineItems;
+    } else {
+      where.lineItems = {
+        some: {
+          OR: selectedReasons.map((r: string) => ({
+            customerNote: { startsWith: r },
+          })),
+        },
+      };
+    }
   }
 
   const totalCount = await prisma.returnRequest.count({ where });
@@ -162,7 +198,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     totalCount,
     totalPages,
     currentPage: page,
-    filters: { shop: shopFilter, status: statusFilter, brand: brandFilter, reasons: reasonFilter },
+    filters: { shop: shopFilter, status: statusFilter, brand: brandFilter, reasons: reasonFilter, type: typeFilter },
   });
 };
 
@@ -268,6 +304,13 @@ export default function AdminReturnsList() {
           {statuses.map((s) => (
             <option key={s.status} value={s.status}>{STATUS_LABELS[s.status] || s.status} ({s.count})</option>
           ))}
+        </select>
+
+        <select className="filter-select" value={filters.type} onChange={(e) => updateFilter("type", e.target.value)}>
+          <option value="all">Všetky typy</option>
+          <option value="claim">Reklamácie</option>
+          <option value="return">Vrátenia</option>
+          <option value="exchange">Výmeny</option>
         </select>
 
         {/* Multi-select reason filter */}

@@ -93,6 +93,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       const claimNumber = formData.get("claimNumber") as string || "";
       const refundAmountApprove = formData.get("refundAmountApprove") as string || "";
       const voucherCode = formData.get("voucherCode") as string || "";
+      const voucherAmount = formData.get("voucherAmount") as string || "";
       const resolutionNote = formData.get("resolutionNote") as string || "";
       const creditNote = formData.get("creditNote") as string || "no";
       const creditNoteNumber = formData.get("creditNoteNumber") as string || "";
@@ -105,7 +106,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       } else if (resolution === "refund_amount") {
         noteParts.push(`Riešenie: Vraciame čiastku ${refundAmountApprove} ${returnRequest.currency}`);
       } else if (resolution === "voucher") {
-        noteParts.push(`Riešenie: Voucher v cene produktu`);
+        noteParts.push(`Riešenie: Voucher${voucherAmount ? ` ${voucherAmount} ${returnRequest.currency}` : ""}`);
         if (voucherCode) noteParts.push(`Kód: ${voucherCode}`);
       }
       if (resolutionNote) noteParts.push(`Pozn: ${resolutionNote}`);
@@ -122,7 +123,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       } else if (resolution === "refund_amount") {
         adminDetails.push(`[SCHVÁLENIE] Vraciame čiastku: ${refundAmountApprove} ${returnRequest.currency}`);
       } else if (resolution === "voucher") {
-        adminDetails.push(`[SCHVÁLENIE] Voucher v cene produktu`);
+        adminDetails.push(`[SCHVÁLENIE] Riešenie voucherom${voucherAmount ? ` — hodnota: ${voucherAmount} ${returnRequest.currency}` : ""}`);
         if (voucherCode) adminDetails.push(`Kód voucheru: ${voucherCode}`);
       }
       if (resolutionNote) adminDetails.push(`Poznámka: ${resolutionNote}`);
@@ -508,7 +509,7 @@ export default function AdminReturnDetail() {
                     </label>
                     <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", padding: "8px 10px", background: approveResolution === "voucher" ? "#fefce8" : "#f9fafb", border: `1px solid ${approveResolution === "voucher" ? "#fde047" : "#e5e7eb"}`, borderRadius: 6 }}>
                       <input type="radio" name="resolution" value="voucher" checked={approveResolution === "voucher"} onChange={() => setApproveResolution("voucher")} style={{ accentColor: "#eab308" }} />
-                      <span style={{ fontWeight: 500 }}>🎟️ Voucher v cene produktu</span>
+                      <span style={{ fontWeight: 500 }}>🎟️ Riešenie voucherom</span>
                     </label>
                   </div>
                 </div>
@@ -532,11 +533,19 @@ export default function AdminReturnDetail() {
                 {/* Voucher info */}
                 {approveResolution === "voucher" && (
                   <div style={{ marginBottom: 10, padding: 10, background: "#fefce8", borderRadius: 8, border: "1px solid #fde047" }}>
-                    <div style={{ fontSize: 12, color: "#854d0e", marginBottom: 6 }}>
-                      Voucher v hodnote <strong>{totalValue.toFixed(2)} {ret.currency}</strong> — odošleme v novej objednávke
+                    <div style={{ fontSize: 12, color: "#854d0e", marginBottom: 8, fontWeight: 600 }}>
+                      Riešenie voucherom
                     </div>
-                    <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Číslo voucheru / kód</label>
-                    <input type="text" name="voucherCode" placeholder="napr. VCH-2026-001" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                    <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Hodnota voucheru ({ret.currency})</label>
+                        <input type="text" name="voucherAmount" placeholder="napr. 25.00" defaultValue="" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Číslo voucheru / kód</label>
+                        <input type="text" name="voucherCode" placeholder="napr. VCH-2026-001" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                      </div>
+                    </div>
                   </div>
                 )}
 
