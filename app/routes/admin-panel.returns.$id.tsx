@@ -533,7 +533,7 @@ export default function AdminReturnDetail() {
             </div>
           )}
 
-          <div className="card">
+          <div className="card" style={{ marginBottom: 16 }}>
             <h3 style={{ marginBottom: 12 }}>História</h3>
             {ret.statusHistory.map((h) => (
               <div key={h.id} style={{ padding: "8px 0", borderBottom: "1px solid #f3f4f6", display: "flex", gap: 12, alignItems: "start" }}>
@@ -551,6 +551,75 @@ export default function AdminReturnDetail() {
               </div>
             ))}
           </div>
+
+          {/* Modul reklamácie - pod Históriou v ľavom stĺpci */}
+          <div className="card">
+            <h3 style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>Reklamácia</span>
+              Modul reklamácie
+            </h3>
+            <Form method="post">
+              <input type="hidden" name="intent" value="save-claim-details" />
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 10 }}>
+                {/* Chyba zo strany */}
+                <div>
+                  <label style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 3 }}>Chyba zo strany</label>
+                  <select name="faultSource" defaultValue={claimDefaults.faultSource} style={{ width: "100%", padding: 6, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 12 }}>
+                    <option value="">— Vybrať —</option>
+                    <option value="sklad">Sklad</option>
+                    <option value="dodávateľ">Dodávateľ</option>
+                    <option value="prepravná spoločnosť">Prepravná spoločnosť</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 3 }}>Poslanie nového produktu</label>
+                  <select name="sendNewProduct" defaultValue={claimDefaults.sendNewProduct} style={{ width: "100%", padding: 6, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 12 }}>
+                    <option value="no">Nie</option>
+                    <option value="yes">Áno</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 3 }}>Vyzdvihnutie</label>
+                  <select name="pickupRequired" defaultValue={claimDefaults.pickupRequired} style={{ width: "100%", padding: 6, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 12 }}>
+                    <option value="no">Nie</option>
+                    <option value="yes">Áno</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 3 }}>Zrušená objednávka</label>
+                  <select name="orderCancelled" defaultValue={claimDefaults.orderCancelled} style={{ width: "100%", padding: 6, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 12 }}>
+                    <option value="no">Nie</option>
+                    <option value="yes">Áno</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 3 }}>Pay back</label>
+                  <select name="payBack" defaultValue={claimDefaults.payBack} style={{ width: "100%", padding: 6, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 12 }}>
+                    <option value="no">Nie</option>
+                    <option value="yes">Áno</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 3 }}>Reklamácia u prepravcu</label>
+                  <select name="carrierClaim" defaultValue={claimDefaults.carrierClaim} style={{ width: "100%", padding: 6, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 12 }}>
+                    <option value="no">Nie</option>
+                    <option value="yes">Áno</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 8, alignItems: "end" }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 3 }}>Poznámka k reklamácii</label>
+                  <input type="text" name="claimDetailNote" placeholder="Voliteľná poznámka..." style={{ width: "100%", padding: 6, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 12 }} />
+                </div>
+                <button type="submit" disabled={isSubmitting} style={{ padding: "6px 16px", background: "#dc2626", color: "white", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>
+                  Uložiť
+                </button>
+              </div>
+            </Form>
+          </div>
         </div>
 
         <div>
@@ -561,24 +630,24 @@ export default function AdminReturnDetail() {
                 <input type="hidden" name="intent" value="approve" />
 
                 {/* Typ riešenia */}
-                <div style={{ marginBottom: 10 }}>
-                  <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 6 }}>Typ riešenia</label>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", padding: "8px 10px", background: approveResolution === "send_product" ? "#f0fdf4" : "#f9fafb", border: `1px solid ${approveResolution === "send_product" ? "#86efac" : "#e5e7eb"}`, borderRadius: 6 }}>
+                <div style={{ marginBottom: 8 }}>
+                  <label style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Typ riešenia</label>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 4 }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer", padding: "6px 8px", background: approveResolution === "send_product" ? "#f0fdf4" : "#f9fafb", border: `1px solid ${approveResolution === "send_product" ? "#86efac" : "#e5e7eb"}`, borderRadius: 6 }}>
                       <input type="radio" name="resolution" value="send_product" checked={approveResolution === "send_product"} onChange={() => setApproveResolution("send_product")} style={{ accentColor: "#22c55e" }} />
-                      <span style={{ fontWeight: 500 }}>📦 Posielame nový tovar</span>
+                      <span style={{ fontWeight: 500 }}>📦 Nový tovar</span>
                     </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", padding: "8px 10px", background: approveResolution === "refund_amount" ? "#f0f9ff" : "#f9fafb", border: `1px solid ${approveResolution === "refund_amount" ? "#93c5fd" : "#e5e7eb"}`, borderRadius: 6 }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer", padding: "6px 8px", background: approveResolution === "refund_amount" ? "#f0f9ff" : "#f9fafb", border: `1px solid ${approveResolution === "refund_amount" ? "#93c5fd" : "#e5e7eb"}`, borderRadius: 6 }}>
                       <input type="radio" name="resolution" value="refund_amount" checked={approveResolution === "refund_amount"} onChange={() => setApproveResolution("refund_amount")} style={{ accentColor: "#3b82f6" }} />
                       <span style={{ fontWeight: 500 }}>💰 Vraciame čiastku</span>
                     </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", padding: "8px 10px", background: approveResolution === "voucher" ? "#fefce8" : "#f9fafb", border: `1px solid ${approveResolution === "voucher" ? "#fde047" : "#e5e7eb"}`, borderRadius: 6 }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer", padding: "6px 8px", background: approveResolution === "voucher" ? "#fefce8" : "#f9fafb", border: `1px solid ${approveResolution === "voucher" ? "#fde047" : "#e5e7eb"}`, borderRadius: 6 }}>
                       <input type="radio" name="resolution" value="voucher" checked={approveResolution === "voucher"} onChange={() => setApproveResolution("voucher")} style={{ accentColor: "#eab308" }} />
-                      <span style={{ fontWeight: 500 }}>🎟️ Riešenie voucherom</span>
+                      <span style={{ fontWeight: 500 }}>🎟️ Voucher</span>
                     </label>
-                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", padding: "8px 10px", background: approveResolution === "next_order" ? "#fdf4ff" : "#f9fafb", border: `1px solid ${approveResolution === "next_order" ? "#e879f9" : "#e5e7eb"}`, borderRadius: 6 }}>
+                    <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12, cursor: "pointer", padding: "6px 8px", background: approveResolution === "next_order" ? "#fdf4ff" : "#f9fafb", border: `1px solid ${approveResolution === "next_order" ? "#e879f9" : "#e5e7eb"}`, borderRadius: 6 }}>
                       <input type="radio" name="resolution" value="next_order" checked={approveResolution === "next_order"} onChange={() => setApproveResolution("next_order")} style={{ accentColor: "#a855f7" }} />
-                      <span style={{ fontWeight: 500 }}>🚚 Posielame pri nasledujúcej objednávke</span>
+                      <span style={{ fontWeight: 500 }}>🚚 Ďalšia obj.</span>
                     </label>
                   </div>
                 </div>
@@ -791,77 +860,6 @@ export default function AdminReturnDetail() {
               </div>
             )}
           </div>
-
-          {/* Modul reklamácie */}
-          <div className="card" style={{ marginBottom: 16 }}>
-              <h3 style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>Reklamácia</span>
-                Modul reklamácie
-              </h3>
-              <Form method="post">
-                <input type="hidden" name="intent" value="save-claim-details" />
-
-                {/* 1. Chyba zo strany */}
-                <div style={{ marginBottom: 10 }}>
-                  <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Chyba zo strany</label>
-                  <select name="faultSource" defaultValue={claimDefaults.faultSource} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
-                    <option value="">— Vybrať —</option>
-                    <option value="sklad">Sklad</option>
-                    <option value="dodávateľ">Dodávateľ</option>
-                    <option value="prepravná spoločnosť">Prepravná spoločnosť</option>
-                  </select>
-                </div>
-
-                {/* 2-6. Áno/Nie options */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
-                  <div>
-                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Poslanie nového produktu</label>
-                    <select name="sendNewProduct" defaultValue={claimDefaults.sendNewProduct} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
-                      <option value="no">Nie</option>
-                      <option value="yes">Áno</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Vyzdvihnutie</label>
-                    <select name="pickupRequired" defaultValue={claimDefaults.pickupRequired} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
-                      <option value="no">Nie</option>
-                      <option value="yes">Áno</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Zrušená objednávka</label>
-                    <select name="orderCancelled" defaultValue={claimDefaults.orderCancelled} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
-                      <option value="no">Nie</option>
-                      <option value="yes">Áno</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Pay back</label>
-                    <select name="payBack" defaultValue={claimDefaults.payBack} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
-                      <option value="no">Nie</option>
-                      <option value="yes">Áno</option>
-                    </select>
-                  </div>
-                  <div style={{ gridColumn: "span 2" }}>
-                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Reklamácia u prepravnej spoločnosti</label>
-                    <select name="carrierClaim" defaultValue={claimDefaults.carrierClaim} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
-                      <option value="no">Nie</option>
-                      <option value="yes">Áno</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Poznámka */}
-                <div style={{ marginBottom: 10 }}>
-                  <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Poznámka k reklamácii</label>
-                  <textarea name="claimDetailNote" rows={2} placeholder="Voliteľná poznámka..." style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
-                </div>
-
-                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "8px 14px", background: "#dc2626", color: "white", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
-                  Uložiť modul reklamácie
-                </button>
-              </Form>
-            </div>
 
           <div className="card">
             <h3 style={{ marginBottom: 8 }}>Interné poznámky</h3>
