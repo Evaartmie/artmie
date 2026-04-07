@@ -267,10 +267,44 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
     }
     case "finish": {
       const finishNote = formData.get("finishNote") as string || "";
+      const finishDate = formData.get("finishDate") as string || "";
+      const closedAtDate = finishDate ? new Date(finishDate) : new Date();
       await prisma.$transaction([
-        prisma.returnRequest.update({ where: { id }, data: { status: "finished", closedAt: new Date() } }),
+        prisma.returnRequest.update({ where: { id }, data: { status: "finished", closedAt: closedAtDate } }),
         prisma.returnStatusHistory.create({ data: { returnRequestId: id!, fromStatus: returnRequest.status, toStatus: "finished", changedBy: "admin-panel", note: finishNote || "Ukončené - práca so zákazníkom dokončená" } }),
       ]);
+      break;
+    }
+    case "save-claim-details": {
+      const faultSource = formData.get("faultSource") as string || "";
+      const sendNewProduct = formData.get("sendNewProduct") as string || "no";
+      const pickupRequired = formData.get("pickupRequired") as string || "no";
+      const orderCancelled = formData.get("orderCancelled") as string || "no";
+      const payBack = formData.get("payBack") as string || "no";
+      const carrierClaim = formData.get("carrierClaim") as string || "no";
+      const claimDetailNote = formData.get("claimDetailNote") as string || "";
+
+      const claimDetails = [
+        `[MODUL REKLAMÁCIE]`,
+        `Chyba zo strany: ${faultSource || "—"}`,
+        `Poslanie nového produktu: ${sendNewProduct === "yes" ? "ÁNO" : "NIE"}`,
+        `Vyzdvihnutie: ${pickupRequired === "yes" ? "ÁNO" : "NIE"}`,
+        `Zrušená objednávka: ${orderCancelled === "yes" ? "ÁNO" : "NIE"}`,
+        `Pay back: ${payBack === "yes" ? "ÁNO" : "NIE"}`,
+        `Reklamácia u prepravcu: ${carrierClaim === "yes" ? "ÁNO" : "NIE"}`,
+        ...(claimDetailNote ? [`Pozn: ${claimDetailNote}`] : []),
+      ].join("\n");
+
+      const existing = returnRequest.adminNotes || "";
+      // Replace existing claim details block or append
+      const claimBlockRegex = /\[MODUL REKLAMÁCIE\][\s\S]*?(?=\n---|\n\[|$)/;
+      let newAdminNotes: string;
+      if (claimBlockRegex.test(existing)) {
+        newAdminNotes = existing.replace(claimBlockRegex, claimDetails);
+      } else {
+        newAdminNotes = existing ? `${existing}\n---\n${claimDetails}` : claimDetails;
+      }
+      await prisma.returnRequest.update({ where: { id }, data: { adminNotes: newAdminNotes } });
       break;
     }
     case "toggle-intake": {
@@ -300,6 +334,33 @@ export default function AdminReturnDetail() {
   const [showManualTracking, setShowManualTracking] = useState(false);
 
   const totalValue = ret.lineItems.reduce((sum, li) => sum + li.pricePerItem * li.quantity, 0);
+
+  // Parse existing claim details from adminNotes
+  const claimDefaults = (() => {
+    const notes = ret.adminNotes || "";
+    const block = notes.match(/\[MODUL REKLAMÁCIE\]([\s\S]*?)(?=\n---|\n\[|$)/);
+    if (!block) return { faultSource: "", sendNewProduct: "no", pickupRequired: "no", orderCancelled: "no", payBack: "no", carrierClaim: "no" };
+    const text = block[1];
+    return {
+      faultSource: text.match(/Chyba zo strany: (.+)/)?.[1]?.replace("—", "") || "",
+      sendNewProduct: text.includes("Poslanie nového produktu: ÁNO") ? "yes" : "no",
+      pickupRequired: text.includes("Vyzdvihnutie: ÁNO") ? "yes" : "no",
+      orderCancelled: text.includes("Zrušená objednávka: ÁNO") ? "yes" : "no",
+      payBack: text.includes("Pay back: ÁNO") ? "yes" : "no",
+      carrierClaim: text.includes("Reklamácia u prepravcu: ÁNO") ? "yes" : "no",
+    };
+  })();
+
+  // Detect return type for showing claim module
+  const returnType = (() => {
+    for (const li of ret.lineItems) {
+      const note = li.customerNote?.split("\n")[0] || "";
+      const t = detectReturnType(note);
+      if (t) return t;
+    }
+    return detectReturnType(ret.customerNotes?.split("\n")[0] || "");
+  })();
+
   const canApprove = ret.status === "pending";
   const canReject = ret.status === "pending";
   const canMarkReceived = ret.status === "approved" || ret.status === "in_transit";
@@ -624,6 +685,10 @@ export default function AdminReturnDetail() {
             {canFinish && ret.status !== "pending" && (
               <Form method="post" style={{ marginTop: 12, borderTop: "2px solid #e5e7eb", paddingTop: 12 }}>
                 <input type="hidden" name="intent" value="finish" />
+                <div style={{ marginBottom: 6 }}>
+                  <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Dátum ukončenia</label>
+                  <input type="date" name="finishDate" defaultValue={new Date().toISOString().split("T")[0]} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                </div>
                 <textarea name="finishNote" rows={2} placeholder="Záverečná poznámka (voliteľné)..." style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", marginBottom: 6, fontSize: 13 }} />
                 <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#059669", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
                   ✅ Ukončené
@@ -726,6 +791,79 @@ export default function AdminReturnDetail() {
               </div>
             )}
           </div>
+
+          {/* Modul reklamácie - only for claims */}
+          {returnType === "claim" && (
+            <div className="card" style={{ marginBottom: 16 }}>
+              <h3 style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
+                <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>Reklamácia</span>
+                Modul reklamácie
+              </h3>
+              <Form method="post">
+                <input type="hidden" name="intent" value="save-claim-details" />
+
+                {/* 1. Chyba zo strany */}
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Chyba zo strany</label>
+                  <select name="faultSource" defaultValue={claimDefaults.faultSource} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
+                    <option value="">— Vybrať —</option>
+                    <option value="sklad">Sklad</option>
+                    <option value="dodávateľ">Dodávateľ</option>
+                    <option value="prepravná spoločnosť">Prepravná spoločnosť</option>
+                  </select>
+                </div>
+
+                {/* 2-6. Áno/Nie options */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Poslanie nového produktu</label>
+                    <select name="sendNewProduct" defaultValue={claimDefaults.sendNewProduct} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
+                      <option value="no">Nie</option>
+                      <option value="yes">Áno</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Vyzdvihnutie</label>
+                    <select name="pickupRequired" defaultValue={claimDefaults.pickupRequired} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
+                      <option value="no">Nie</option>
+                      <option value="yes">Áno</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Zrušená objednávka</label>
+                    <select name="orderCancelled" defaultValue={claimDefaults.orderCancelled} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
+                      <option value="no">Nie</option>
+                      <option value="yes">Áno</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Pay back</label>
+                    <select name="payBack" defaultValue={claimDefaults.payBack} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
+                      <option value="no">Nie</option>
+                      <option value="yes">Áno</option>
+                    </select>
+                  </div>
+                  <div style={{ gridColumn: "span 2" }}>
+                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Reklamácia u prepravnej spoločnosti</label>
+                    <select name="carrierClaim" defaultValue={claimDefaults.carrierClaim} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
+                      <option value="no">Nie</option>
+                      <option value="yes">Áno</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Poznámka */}
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Poznámka k reklamácii</label>
+                  <textarea name="claimDetailNote" rows={2} placeholder="Voliteľná poznámka..." style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                </div>
+
+                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "8px 14px", background: "#dc2626", color: "white", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 13 }}>
+                  Uložiť modul reklamácie
+                </button>
+              </Form>
+            </div>
+          )}
 
           <div className="card">
             <h3 style={{ marginBottom: 8 }}>Interné poznámky</h3>
