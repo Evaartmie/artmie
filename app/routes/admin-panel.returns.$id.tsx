@@ -76,6 +76,8 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       const resolution = formData.get("resolution") as string || "";
       const claimNumber = formData.get("claimNumber") as string || "";
       const refundAmountApprove = formData.get("refundAmountApprove") as string || "";
+      const voucherCode = formData.get("voucherCode") as string || "";
+      const resolutionNote = formData.get("resolutionNote") as string || "";
       const creditNote = formData.get("creditNote") as string || "no";
       const creditNoteNumber = formData.get("creditNoteNumber") as string || "";
 
@@ -86,7 +88,11 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         if (claimNumber) noteParts.push(`Č. reklamácie: ${claimNumber}`);
       } else if (resolution === "refund_amount") {
         noteParts.push(`Riešenie: Vraciame čiastku ${refundAmountApprove} ${returnRequest.currency}`);
+      } else if (resolution === "voucher") {
+        noteParts.push(`Riešenie: Voucher v cene produktu`);
+        if (voucherCode) noteParts.push(`Kód: ${voucherCode}`);
       }
+      if (resolutionNote) noteParts.push(`Pozn: ${resolutionNote}`);
       if (creditNote === "yes") {
         noteParts.push(`Dobropis: ÁNO${creditNoteNumber ? ` (č. ${creditNoteNumber})` : ""}`);
       }
@@ -99,7 +105,11 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
         if (claimNumber) adminDetails.push(`Č. reklamácie: ${claimNumber}`);
       } else if (resolution === "refund_amount") {
         adminDetails.push(`[SCHVÁLENIE] Vraciame čiastku: ${refundAmountApprove} ${returnRequest.currency}`);
+      } else if (resolution === "voucher") {
+        adminDetails.push(`[SCHVÁLENIE] Voucher v cene produktu`);
+        if (voucherCode) adminDetails.push(`Kód voucheru: ${voucherCode}`);
       }
+      if (resolutionNote) adminDetails.push(`Poznámka: ${resolutionNote}`);
       if (creditNote === "yes") {
         adminDetails.push(`Dobropis: ÁNO${creditNoteNumber ? `, č. ${creditNoteNumber}` : ""}`);
       } else {
@@ -279,6 +289,20 @@ export default function AdminReturnDetail() {
           <span className={`badge badge-${ret.status}`} style={{ marginLeft: 12, verticalAlign: "middle" }}>
             {STATUS_LABELS[ret.status] || ret.status}
           </span>
+          {/* Typ vrátenia badge */}
+          {(() => {
+            const reasons = ret.lineItems.map((li: any) => li.customerNote?.split("\n")[0] || "").filter(Boolean);
+            const hasClaim = reasons.some((r: string) => r.startsWith("Reklamácia"));
+            const hasReturn = reasons.some((r: string) => r.startsWith("Vrátenie"));
+            const hasExchange = reasons.some((r: string) => r.startsWith("Výmena"));
+            return (
+              <>
+                {hasClaim && <span style={{ marginLeft: 8, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", verticalAlign: "middle" }}>Reklamácia</span>}
+                {hasReturn && <span style={{ marginLeft: 8, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", verticalAlign: "middle" }}>Vrátenie</span>}
+                {hasExchange && <span style={{ marginLeft: 8, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fefce8", color: "#ca8a04", border: "1px solid #fde68a", verticalAlign: "middle" }}>Výmena</span>}
+              </>
+            );
+          })()}
         </h2>
         <p>
           <span className={`store-badge store-${ret.storeBrand.toLowerCase()}`}>{ret.storeName}</span>
@@ -395,7 +419,19 @@ export default function AdminReturnDetail() {
 
           {ret.photos.length > 0 && (
             <div className="card" style={{ marginBottom: 16 }}>
-              <h3 style={{ marginBottom: 12 }}>Fotky ({ret.photos.length})</h3>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <h3>Fotky ({ret.photos.length})</h3>
+                {/* Modul reklamácie badge */}
+                {ret.lineItems.some((li: any) => (li.customerNote?.split("\n")[0] || "").startsWith("Reklamácia")) && (
+                  <span style={{
+                    padding: "5px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700,
+                    background: "linear-gradient(135deg, #dc2626, #b91c1c)", color: "white",
+                    letterSpacing: "0.5px", textTransform: "uppercase",
+                  }}>
+                    Modul reklamácie
+                  </span>
+                )}
+              </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
                 {ret.photos.map((photo) => (
                   <a key={photo.id} href={photo.fileUrl} target="_blank" rel="noopener noreferrer" style={{ display: "block" }}>
@@ -448,6 +484,10 @@ export default function AdminReturnDetail() {
                       <input type="radio" name="resolution" value="refund_amount" checked={approveResolution === "refund_amount"} onChange={() => setApproveResolution("refund_amount")} style={{ accentColor: "#3b82f6" }} />
                       <span style={{ fontWeight: 500 }}>💰 Vraciame čiastku</span>
                     </label>
+                    <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, cursor: "pointer", padding: "8px 10px", background: approveResolution === "voucher" ? "#fefce8" : "#f9fafb", border: `1px solid ${approveResolution === "voucher" ? "#fde047" : "#e5e7eb"}`, borderRadius: 6 }}>
+                      <input type="radio" name="resolution" value="voucher" checked={approveResolution === "voucher"} onChange={() => setApproveResolution("voucher")} style={{ accentColor: "#eab308" }} />
+                      <span style={{ fontWeight: 500 }}>🎟️ Voucher v cene produktu</span>
+                    </label>
                   </div>
                 </div>
 
@@ -466,6 +506,23 @@ export default function AdminReturnDetail() {
                     <input type="number" name="refundAmountApprove" defaultValue={totalValue.toFixed(2)} step="0.01" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
                   </div>
                 )}
+
+                {/* Voucher info */}
+                {approveResolution === "voucher" && (
+                  <div style={{ marginBottom: 10, padding: 10, background: "#fefce8", borderRadius: 8, border: "1px solid #fde047" }}>
+                    <div style={{ fontSize: 12, color: "#854d0e", marginBottom: 6 }}>
+                      Voucher v hodnote <strong>{totalValue.toFixed(2)} {ret.currency}</strong> — odošleme v novej objednávke
+                    </div>
+                    <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Číslo voucheru / kód</label>
+                    <input type="text" name="voucherCode" placeholder="napr. VCH-2026-001" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                  </div>
+                )}
+
+                {/* Poznámka k riešeniu */}
+                <div style={{ marginBottom: 10 }}>
+                  <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Poznámka k riešeniu</label>
+                  <textarea name="resolutionNote" rows={2} placeholder="Interná poznámka k tomuto riešeniu..." style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                </div>
 
                 {/* Dobropis */}
                 <div style={{ marginBottom: 10 }}>

@@ -144,6 +144,14 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       itemCount: r.lineItems.length,
       productNames: r.lineItems.map(li => li.productTitle).join(", "),
       reasons: [...new Set(r.lineItems.map(li => li.reason?.label || li.customerNote?.split("\n")[0] || "").filter(Boolean))].join(", "),
+      returnType: (() => {
+        const notes = r.lineItems.map(li => li.customerNote?.split("\n")[0] || "");
+        const types: string[] = [];
+        if (notes.some(n => n.startsWith("Reklamácia"))) types.push("claim");
+        if (notes.some(n => n.startsWith("Vrátenie"))) types.push("return");
+        if (notes.some(n => n.startsWith("Výmena"))) types.push("exchange");
+        return types;
+      })(),
     })),
     shops,
     statuses,
@@ -405,6 +413,11 @@ export default function AdminReturnsList() {
                     <td>
                       <div style={{ fontSize: 13 }}>{ret.productNames.length > 50 ? ret.productNames.substring(0, 47) + "..." : ret.productNames}</div>
                       <div style={{ fontSize: 12, color: "#dc2626" }}>{ret.reasons || "—"}</div>
+                      <div style={{ display: "flex", gap: 4, marginTop: 3 }}>
+                        {ret.returnType?.includes("claim") && <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>Reklamácia</span>}
+                        {ret.returnType?.includes("return") && <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe" }}>Vrátenie</span>}
+                        {ret.returnType?.includes("exchange") && <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: "#fefce8", color: "#ca8a04", border: "1px solid #fde68a" }}>Výmena</span>}
+                      </div>
                     </td>
                     <td style={{ whiteSpace: "nowrap" }}>{new Date(ret.createdAt).toLocaleDateString("sk-SK")}</td>
                     <td style={{ fontWeight: 500 }}>
