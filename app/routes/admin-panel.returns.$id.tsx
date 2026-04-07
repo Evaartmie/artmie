@@ -792,9 +792,8 @@ export default function AdminReturnDetail() {
             )}
           </div>
 
-          {/* Modul reklamácie - only for claims */}
-          {returnType === "claim" && (
-            <div className="card" style={{ marginBottom: 16 }}>
+          {/* Modul reklamácie */}
+          <div className="card" style={{ marginBottom: 16 }}>
               <h3 style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ padding: "2px 8px", borderRadius: 4, fontSize: 11, fontWeight: 700, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>Reklamácia</span>
                 Modul reklamácie
@@ -863,7 +862,6 @@ export default function AdminReturnDetail() {
                 </button>
               </Form>
             </div>
-          )}
 
           <div className="card">
             <h3 style={{ marginBottom: 8 }}>Interné poznámky</h3>
