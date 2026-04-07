@@ -145,12 +145,15 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       productNames: r.lineItems.map(li => li.productTitle).join(", "),
       reasons: [...new Set(r.lineItems.map(li => li.reason?.label || li.customerNote?.split("\n")[0] || "").filter(Boolean))].join(", "),
       returnType: (() => {
-        const notes = r.lineItems.map(li => li.customerNote?.split("\n")[0] || "");
-        const types: string[] = [];
-        if (notes.some(n => n.startsWith("Reklamácia"))) types.push("claim");
-        if (notes.some(n => n.startsWith("Vrátenie"))) types.push("return");
-        if (notes.some(n => n.startsWith("Výmena"))) types.push("exchange");
-        return types;
+        const types = new Set<string>();
+        for (const li of r.lineItems) {
+          const note = (li.customerNote?.split("\n")[0] || "").toLowerCase();
+          if (!note) continue;
+          if (note.startsWith("reklamácia") || note.includes("defective") || note.includes("damaged") || note.includes("wrong") || note.includes("missing") || note.includes("low quality") || note.includes("nekvalitný") || note.includes("poškodený")) types.add("claim");
+          else if (note.startsWith("vrátenie") || note.includes("does not fit") || note.includes("changed mind") || note.includes("not as described") || note.includes("odstúpenie")) types.add("return");
+          else if (note.startsWith("výmena") || note.includes("exchange")) types.add("exchange");
+        }
+        return Array.from(types);
       })(),
     })),
     shops,
@@ -171,6 +174,7 @@ const STATUS_LABELS: Record<string, string> = {
   received: "Prijaté",
   refunded: "Refundované",
   closed: "Uzavreté",
+  finished: "Ukončené",
   cancelled: "Zrušené",
 };
 

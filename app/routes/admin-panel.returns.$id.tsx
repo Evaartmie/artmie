@@ -15,8 +15,24 @@ const STATUS_LABELS: Record<string, string> = {
   received: "Prijaté",
   refunded: "Refundované",
   closed: "Uzavreté",
+  finished: "Ukončené",
   cancelled: "Zrušené",
 };
+
+// Detect return type from customerNote first line (supports both new SK labels and old EN labels)
+function detectReturnType(note: string): "claim" | "return" | "exchange" | null {
+  if (!note) return null;
+  const lower = note.toLowerCase();
+  // New SK format
+  if (note.startsWith("Reklamácia")) return "claim";
+  if (note.startsWith("Vrátenie")) return "return";
+  if (note.startsWith("Výmena")) return "exchange";
+  // Old EN format (legacy data)
+  if (lower.includes("defective") || lower.includes("damaged") || lower.includes("wrong") || lower.includes("missing") || lower.includes("low quality") || lower.includes("nekvalitný") || lower.includes("poškodený") || lower.includes("nesprávny") || lower.includes("chýbajúci")) return "claim";
+  if (lower.includes("does not fit") || lower.includes("changed mind") || lower.includes("not as described") || lower.includes("odstúpenie") || lower.includes("return")) return "return";
+  if (lower.includes("exchange") || lower.includes("výmena")) return "exchange";
+  return null;
+}
 
 export const loader = async ({ request, params }: LoaderFunctionArgs) => {
   await requireAdminAuth(request);
@@ -244,6 +260,14 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       ]);
       break;
     }
+    case "finish": {
+      const finishNote = formData.get("finishNote") as string || "";
+      await prisma.$transaction([
+        prisma.returnRequest.update({ where: { id }, data: { status: "finished", closedAt: new Date() } }),
+        prisma.returnStatusHistory.create({ data: { returnRequestId: id!, fromStatus: returnRequest.status, toStatus: "finished", changedBy: "admin-panel", note: finishNote || "Ukončené - práca so zákazníkom dokončená" } }),
+      ]);
+      break;
+    }
     case "toggle-intake": {
       const intakeValue = formData.get("intakeCompleted") === "true";
       await prisma.returnRequest.update({
@@ -275,7 +299,8 @@ export default function AdminReturnDetail() {
   const canReject = ret.status === "pending";
   const canMarkReceived = ret.status === "approved" || ret.status === "in_transit";
   const canRefund = ret.status === "received";
-  const canClose = !["closed", "cancelled", "refunded"].includes(ret.status);
+  const canClose = !["closed", "finished", "cancelled"].includes(ret.status);
+  const canFinish = !["finished", "cancelled"].includes(ret.status);
 
   return (
     <div>
@@ -291,15 +316,12 @@ export default function AdminReturnDetail() {
           </span>
           {/* Typ vrátenia badge */}
           {(() => {
-            const reasons = ret.lineItems.map((li: any) => li.customerNote?.split("\n")[0] || "").filter(Boolean);
-            const hasClaim = reasons.some((r: string) => r.startsWith("Reklamácia"));
-            const hasReturn = reasons.some((r: string) => r.startsWith("Vrátenie"));
-            const hasExchange = reasons.some((r: string) => r.startsWith("Výmena"));
+            const types = new Set(ret.lineItems.map((li: any) => detectReturnType(li.customerNote?.split("\n")[0] || "")).filter(Boolean));
             return (
               <>
-                {hasClaim && <span style={{ marginLeft: 8, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", verticalAlign: "middle" }}>Reklamácia</span>}
-                {hasReturn && <span style={{ marginLeft: 8, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", verticalAlign: "middle" }}>Vrátenie</span>}
-                {hasExchange && <span style={{ marginLeft: 8, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fefce8", color: "#ca8a04", border: "1px solid #fde68a", verticalAlign: "middle" }}>Výmena</span>}
+                {types.has("claim") && <span style={{ marginLeft: 8, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca", verticalAlign: "middle" }}>Reklamácia</span>}
+                {types.has("return") && <span style={{ marginLeft: 8, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe", verticalAlign: "middle" }}>Vrátenie</span>}
+                {types.has("exchange") && <span style={{ marginLeft: 8, padding: "3px 10px", borderRadius: 20, fontSize: 12, fontWeight: 600, background: "#fefce8", color: "#ca8a04", border: "1px solid #fde68a", verticalAlign: "middle" }}>Výmena</span>}
               </>
             );
           })()}
@@ -422,7 +444,7 @@ export default function AdminReturnDetail() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
                 <h3>Fotky ({ret.photos.length})</h3>
                 {/* Modul reklamácie badge */}
-                {ret.lineItems.some((li: any) => (li.customerNote?.split("\n")[0] || "").startsWith("Reklamácia")) && (
+                {ret.lineItems.some((li: any) => detectReturnType(li.customerNote?.split("\n")[0] || "") === "claim") && (
                   <span style={{
                     padding: "5px 14px", borderRadius: 8, fontSize: 12, fontWeight: 700,
                     background: "linear-gradient(135deg, #dc2626, #b91c1c)", color: "white",
@@ -573,7 +595,17 @@ export default function AdminReturnDetail() {
                 <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#6b7280", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14, marginTop: 8 }}>Uzavrieť</button>
               </Form>
             )}
-            {(ret.status === "refunded" || ret.status === "closed" || ret.status === "cancelled") && (
+            {canFinish && ret.status !== "pending" && (
+              <Form method="post" style={{ marginTop: 12, borderTop: "2px solid #e5e7eb", paddingTop: 12 }}>
+                <input type="hidden" name="intent" value="finish" />
+                <textarea name="finishNote" rows={2} placeholder="Záverečná poznámka (voliteľné)..." style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", marginBottom: 6, fontSize: 13 }} />
+                <button type="submit" disabled={isSubmitting} style={{ width: "100%", padding: "10px 16px", background: "#059669", color: "white", border: "none", borderRadius: 8, fontWeight: 600, cursor: "pointer", fontSize: 14 }}>
+                  ✅ Ukončené
+                </button>
+                <div style={{ fontSize: 11, color: "#9ca3af", textAlign: "center", marginTop: 4 }}>Práca so zákazníkom je dokončená</div>
+              </Form>
+            )}
+            {(ret.status === "finished" || ret.status === "cancelled") && (
               <div style={{ textAlign: "center", padding: 12, color: "#9ca3af", fontSize: 13 }}>Žiadne dostupné akcie</div>
             )}
           </div>

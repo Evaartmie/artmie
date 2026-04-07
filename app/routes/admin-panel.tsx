@@ -2,17 +2,39 @@ import type { LoaderFunctionArgs, LinksFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Outlet, Link, useLoaderData, useLocation } from "@remix-run/react";
 import { adminSessionCookie } from "../utils/admin-auth.server";
+import { prisma } from "../db.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookieHeader = request.headers.get("Cookie");
   const session = await adminSessionCookie.parse(cookieHeader);
   const isAuthenticated = session?.authenticated === true;
 
-  return json({ isAuthenticated });
+  let counts = { pending: 0, claims: 0, returns: 0, exchanges: 0 };
+
+  if (isAuthenticated) {
+    try {
+      counts.pending = await prisma.returnRequest.count({ where: { status: "pending" } });
+      // Count by type from line items
+      const allReturns = await prisma.returnRequest.findMany({
+        where: { status: { notIn: ["finished", "cancelled", "closed"] } },
+        include: { lineItems: { select: { customerNote: true } } },
+      });
+      for (const r of allReturns) {
+        for (const li of r.lineItems) {
+          const note = (li.customerNote?.split("\n")[0] || "").toLowerCase();
+          if (note.startsWith("reklamácia") || note.includes("defective") || note.includes("damaged") || note.includes("wrong") || note.includes("missing")) { counts.claims++; break; }
+          if (note.startsWith("vrátenie") || note.includes("does not fit") || note.includes("changed mind") || note.includes("not as described")) { counts.returns++; break; }
+          if (note.startsWith("výmena") || note.includes("exchange")) { counts.exchanges++; break; }
+        }
+      }
+    } catch (e) { /* ignore if DB not ready */ }
+  }
+
+  return json({ isAuthenticated, counts });
 };
 
 export default function AdminPanelLayout() {
-  const { isAuthenticated } = useLoaderData<typeof loader>();
+  const { isAuthenticated, counts } = useLoaderData<typeof loader>();
   const location = useLocation();
 
   if (!isAuthenticated) {
@@ -50,8 +72,34 @@ export default function AdminPanelLayout() {
               >
                 <span className="nav-icon">{item.icon}</span>
                 {item.label}
+                {item.path === "/admin-panel/returns" && counts.pending > 0 && (
+                  <span style={{ marginLeft: "auto", background: "#ef4444", color: "white", borderRadius: 10, padding: "2px 8px", fontSize: 11, fontWeight: 700 }}>
+                    {counts.pending}
+                  </span>
+                )}
               </Link>
             ))}
+
+            {/* Typ vrátení s počtami */}
+            <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
+              <div style={{ padding: "4px 16px", fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>
+                Na riešenie
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 10px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.claims > 0 ? "rgba(239,68,68,0.15)" : "transparent" }}>
+                  <span style={{ fontSize: 13, color: counts.claims > 0 ? "#fca5a5" : "rgba(255,255,255,0.4)" }}>Reklamácie</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: counts.claims > 0 ? "#fca5a5" : "rgba(255,255,255,0.3)" }}>{counts.claims}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.returns > 0 ? "rgba(59,130,246,0.15)" : "transparent" }}>
+                  <span style={{ fontSize: 13, color: counts.returns > 0 ? "#93c5fd" : "rgba(255,255,255,0.4)" }}>Vrátenia</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: counts.returns > 0 ? "#93c5fd" : "rgba(255,255,255,0.3)" }}>{counts.returns}</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.exchanges > 0 ? "rgba(234,179,8,0.15)" : "transparent" }}>
+                  <span style={{ fontSize: 13, color: counts.exchanges > 0 ? "#fde047" : "rgba(255,255,255,0.4)" }}>Výmeny</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: counts.exchanges > 0 ? "#fde047" : "rgba(255,255,255,0.3)" }}>{counts.exchanges}</span>
+                </div>
+              </div>
+            </div>
           </nav>
           <div className="sidebar-footer">
             <form method="post" action="/admin-panel/logout">
@@ -318,6 +366,7 @@ const adminStyles = `
   .badge-refunded { background: #cffafe; color: #155e75; }
   .badge-rejected { background: #fee2e2; color: #991b1b; }
   .badge-closed { background: #f3f4f6; color: #374151; }
+  .badge-finished { background: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; }
   .badge-cancelled { background: #f3f4f6; color: #6b7280; }
 
   .store-badge {
