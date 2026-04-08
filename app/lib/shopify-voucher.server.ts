@@ -42,10 +42,29 @@ export async function createShopifyVoucher(input: VoucherInput): Promise<Voucher
 
   const accessToken = session.accessToken;
 
-  // 2. Generate unique code
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  const code = `VCH-${timestamp}-${random}`;
+  // 2. Generate unique code — format: CLA + last 4 digits of order number
+  // e.g. order #1234 → CLA1234, repeat → CLA1234B, CLA1234C, etc.
+  const orderDigits = (orderName || "").replace(/\D/g, "").slice(-4) || "0000";
+  const baseCode = `CLA${orderDigits}`;
+
+  // Check if this code already exists in Shopify — if so, add suffix letter
+  let code = baseCode;
+  const suffixLetters = "BCDEFGHJKLMNPRSTUVWXYZ"; // skip confusing letters I,O,Q
+  for (let attempt = 0; attempt <= suffixLetters.length; attempt++) {
+    // Check if discount code already exists
+    const checkResp = await fetch(
+      `https://${shop}/admin/api/${API_VERSION}/discount_codes/lookup.json?code=${code}`,
+      { headers: { "X-Shopify-Access-Token": accessToken } }
+    );
+    if (checkResp.status === 404 || !checkResp.ok) {
+      // Code doesn't exist — we can use it
+      break;
+    }
+    // Code exists — add next suffix letter
+    if (attempt < suffixLetters.length) {
+      code = `${baseCode}${suffixLetters[attempt]}`;
+    }
+  }
 
   try {
     // 3. Create Price Rule
