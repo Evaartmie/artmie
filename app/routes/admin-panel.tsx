@@ -58,7 +58,7 @@ export default function AdminPanelLayout() {
 
   const navItems = [
     { label: "Dashboard", path: "/admin-panel/dashboard", icon: "\u{1F4CA}" },
-    { label: "Vratenia", path: "/admin-panel/returns", icon: "\u{1F4E6}" },
+    { label: "Nové Tickety", path: "/admin-panel/returns", icon: "\u{1F4E6}" },
     { label: "Reporty", path: "/admin-panel/reports", icon: "\u{1F4C4}" },
     { label: "Obchody", path: "/admin-panel/stores", icon: "\u{1F3EA}" },
   ];
