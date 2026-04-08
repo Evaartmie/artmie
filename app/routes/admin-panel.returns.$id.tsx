@@ -219,6 +219,27 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       await prisma.returnRequest.update({ where: { id }, data: { adminNotes: note } });
       break;
     }
+    case "save-credit-note": {
+      const creditNoteValue = formData.get("creditNoteValue") as string || "no";
+      const creditNoteNum = formData.get("creditNoteNum") as string || "";
+      const existing = returnRequest.adminNotes || "";
+
+      // Build credit note block
+      const creditBlock = creditNoteValue === "yes"
+        ? `[DOBROPIS] Áno${creditNoteNum ? ` — č. ${creditNoteNum}` : ""}`
+        : `[DOBROPIS] Nie`;
+
+      // Replace existing credit note block or append
+      const creditRegex = /\[DOBROPIS\].*(?:\n|$)/;
+      let newNotes: string;
+      if (creditRegex.test(existing)) {
+        newNotes = existing.replace(creditRegex, creditBlock);
+      } else {
+        newNotes = existing ? `${existing}\n${creditBlock}` : creditBlock;
+      }
+      await prisma.returnRequest.update({ where: { id }, data: { adminNotes: newNotes } });
+      break;
+    }
     case "generate-label": {
       const carrierCode = formData.get("carrier") as CarrierCode;
       const weight = parseFloat(formData.get("weight") as string || "1");
@@ -380,6 +401,27 @@ export default function AdminReturnDetail() {
       payBack: text.includes("Pay back: ÁNO") ? "yes" : "no",
       carrierClaim: text.includes("Reklamácia u prepravcu: ÁNO") ? "yes" : "no",
     };
+  })();
+
+  // Parse current credit note status from adminNotes
+  const creditNoteDefaults = (() => {
+    const notes = ret.adminNotes || "";
+    const match = notes.match(/\[DOBROPIS\]\s*(.*?)(?:\n|$)/);
+    if (!match) {
+      // Also check old format from approve action
+      const oldMatch = notes.match(/Dobropis:\s*(ÁNO|NIE)(.*?)(?:\n|$)/);
+      if (oldMatch) {
+        const numMatch = oldMatch[2]?.match(/č\.\s*(.+)/);
+        return { value: oldMatch[1] === "ÁNO" ? "yes" : "no", number: numMatch?.[1]?.trim() || "" };
+      }
+      return { value: "no", number: "" };
+    }
+    const text = match[1];
+    if (text.startsWith("Áno")) {
+      const numMatch = text.match(/č\.\s*(.+)/);
+      return { value: "yes", number: numMatch?.[1]?.trim() || "" };
+    }
+    return { value: "no", number: "" };
   })();
 
   // Detect return type for showing claim module
@@ -848,8 +890,36 @@ export default function AdminReturnDetail() {
                 <div style={{ fontSize: 11, color: "#9ca3af", textAlign: "center", marginTop: 4 }}>Práca so zákazníkom je dokončená</div>
               </Form>
             )}
-            {(ret.status === "finished" || ret.status === "cancelled") && (
+            {ret.status === "cancelled" && (
               <div style={{ textAlign: "center", padding: 12, color: "#9ca3af", fontSize: 13 }}>Žiadne dostupné akcie</div>
+            )}
+
+            {/* Dobropis — vždy viditeľný, editovateľný kedykoľvek */}
+            {ret.status !== "cancelled" && (
+              <Form method="post" style={{ marginTop: 12, borderTop: "2px solid #e5e7eb", paddingTop: 12 }}>
+                <input type="hidden" name="intent" value="save-credit-note" />
+                <div style={{ display: "flex", gap: 8, alignItems: "end" }}>
+                  <div style={{ minWidth: 100 }}>
+                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Dobropis</label>
+                    <select name="creditNoteValue" defaultValue={creditNoteDefaults.value} style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
+                      <option value="no">Nie</option>
+                      <option value="yes">Áno</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: 12, color: "#6b7280", fontWeight: 600, display: "block", marginBottom: 4 }}>Číslo dobropisu</label>
+                    <input type="text" name="creditNoteNum" defaultValue={creditNoteDefaults.number} placeholder="napr. DOB-2026-001" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                  </div>
+                  <button type="submit" disabled={isSubmitting} style={{ padding: "8px 14px", background: "#374151", color: "white", border: "none", borderRadius: 6, fontWeight: 600, cursor: "pointer", fontSize: 12, whiteSpace: "nowrap" }}>
+                    Uložiť
+                  </button>
+                </div>
+                {creditNoteDefaults.value === "yes" && (
+                  <div style={{ marginTop: 6, fontSize: 12, color: "#059669", fontWeight: 500 }}>
+                    ✅ Dobropis: Áno{creditNoteDefaults.number ? ` — č. ${creditNoteDefaults.number}` : ""}
+                  </div>
+                )}
+              </Form>
             )}
           </div>
 
