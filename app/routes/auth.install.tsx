@@ -12,7 +12,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
   const apiKey = process.env.SHOPIFY_API_KEY;
   const apiSecret = process.env.SHOPIFY_API_SECRET;
-  const scopes = process.env.SCOPES || "read_customers,read_orders,read_products,read_returns,write_orders,write_returns";
+  const scopes = process.env.SCOPES || "read_customers,read_orders,read_products,read_returns,write_orders,write_returns,write_price_rules,read_price_rules,write_discounts,read_discounts";
   const appUrl = process.env.SHOPIFY_APP_URL || "";
   const redirectUri = `${appUrl}/auth/install`;
 

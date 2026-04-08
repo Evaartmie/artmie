@@ -6,6 +6,7 @@ import { requireAdminAuth, getStoreName, getStoreBrand } from "../utils/admin-au
 import { prisma } from "../db.server";
 import { getCarriersForShop, getCountryForShop, generateReturnLabel, RETURN_ADDRESS } from "../lib/carriers.server";
 import type { CarrierCode } from "../lib/carriers.server";
+import { createShopifyVoucher } from "../lib/shopify-voucher.server";
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "Čakajúce",
@@ -92,11 +93,34 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       const resolution = formData.get("resolution") as string || "";
       const claimNumber = formData.get("claimNumber") as string || "";
       const refundAmountApprove = formData.get("refundAmountApprove") as string || "";
-      const voucherCode = formData.get("voucherCode") as string || "";
+      let voucherCode = formData.get("voucherCode") as string || "";
       const voucherAmount = formData.get("voucherAmount") as string || "";
+      const voucherType = formData.get("voucherType") as string || "fixed"; // "fixed" or "percentage"
       const resolutionNote = formData.get("resolutionNote") as string || "";
       const creditNote = formData.get("creditNote") as string || "no";
       const creditNoteNumber = formData.get("creditNoteNumber") as string || "";
+
+      // Auto-create Shopify voucher if resolution is voucher and amount is provided
+      let shopifyVoucherError = "";
+      // Parse amount — support both "109.9" and "109,9" (European format)
+      const parsedVoucherAmount = parseFloat(voucherAmount.replace(",", "."));
+      if (resolution === "voucher" && voucherAmount && !isNaN(parsedVoucherAmount)) {
+        const voucherResult = await createShopifyVoucher({
+          shop: returnRequest.shop,
+          amount: parsedVoucherAmount,
+          isPercentage: voucherType === "percentage",
+          currency: returnRequest.currency,
+          customerEmail: returnRequest.customerEmail,
+          orderName: returnRequest.shopifyOrderName,
+          returnId: id!,
+        });
+
+        if (voucherResult.success && voucherResult.code) {
+          voucherCode = voucherResult.code; // Auto-fill the generated code
+        } else {
+          shopifyVoucherError = voucherResult.error || "Neznáma chyba pri vytváraní voucheru";
+        }
+      }
 
       // Build approval note with all details
       const noteParts: string[] = ["Schválené cez admin panel"];
@@ -106,8 +130,10 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       } else if (resolution === "refund_amount") {
         noteParts.push(`Riešenie: Vraciame čiastku ${refundAmountApprove} ${returnRequest.currency}`);
       } else if (resolution === "voucher") {
-        noteParts.push(`Riešenie: Voucher${voucherAmount ? ` ${voucherAmount} ${returnRequest.currency}` : ""}`);
+        const vLabel = voucherType === "percentage" ? `${voucherAmount}%` : `${voucherAmount} ${returnRequest.currency}`;
+        noteParts.push(`Riešenie: Voucher ${vLabel}`);
         if (voucherCode) noteParts.push(`Kód: ${voucherCode}`);
+        if (shopifyVoucherError) noteParts.push(`⚠️ Shopify chyba: ${shopifyVoucherError}`);
       } else if (resolution === "next_order") {
         noteParts.push(`Riešenie: Posielame pri nasledujúcej objednávke`);
       }
@@ -125,8 +151,13 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       } else if (resolution === "refund_amount") {
         adminDetails.push(`[SCHVÁLENIE] Vraciame čiastku: ${refundAmountApprove} ${returnRequest.currency}`);
       } else if (resolution === "voucher") {
-        adminDetails.push(`[SCHVÁLENIE] Riešenie voucherom${voucherAmount ? ` — hodnota: ${voucherAmount} ${returnRequest.currency}` : ""}`);
+        const vLabel = voucherType === "percentage" ? `${voucherAmount}%` : `${voucherAmount} ${returnRequest.currency}`;
+        adminDetails.push(`[SCHVÁLENIE] Riešenie voucherom — ${vLabel}`);
         if (voucherCode) adminDetails.push(`Kód voucheru: ${voucherCode}`);
+        adminDetails.push(shopifyVoucherError
+          ? `⚠️ Shopify: ${shopifyVoucherError} (kód nebol vytvorený v Shopify)`
+          : `✅ Voucher automaticky vytvorený v Shopify`
+        );
       } else if (resolution === "next_order") {
         adminDetails.push(`[SCHVÁLENIE] Posielame pri nasledujúcej objednávke`);
       }
@@ -397,6 +428,48 @@ export default function AdminReturnDetail() {
           {" · "}Vytvorené: {new Date(ret.createdAt).toLocaleString("sk-SK")}
         </p>
       </div>
+
+      {/* Riešenie banner — ak je schválené, zobrazí riešenie + voucher kód */}
+      {ret.status !== "pending" && ret.adminNotes && (() => {
+        const notes = ret.adminNotes || "";
+        const hasResolution = notes.includes("[SCHVÁLENIE]");
+        if (!hasResolution) return null;
+
+        const resolutionLine = notes.split("\n").find((l: string) => l.includes("[SCHVÁLENIE]")) || "";
+        const voucherCodeMatch = notes.match(/Kód voucheru:\s*(.+?)(?:\n|$)/);
+        const shopifyOk = notes.includes("✅ Voucher automaticky vytvorený");
+        const shopifyError = notes.match(/⚠️ Shopify:\s*(.+?)(?:\n|$)/);
+
+        return (
+          <div style={{
+            marginBottom: 16, padding: "14px 18px", borderRadius: 10,
+            background: voucherCodeMatch ? "#f0fdf4" : shopifyError ? "#fef2f2" : "#eff6ff",
+            border: `1px solid ${voucherCodeMatch ? "#86efac" : shopifyError ? "#fecaca" : "#93c5fd"}`,
+          }}>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4, color: "#374151" }}>
+              {resolutionLine.replace("[SCHVÁLENIE] ", "")}
+            </div>
+            {voucherCodeMatch && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 6 }}>
+                <span style={{ fontSize: 12, color: "#6b7280" }}>Kód voucheru:</span>
+                <span style={{
+                  fontFamily: "monospace", fontSize: 18, fontWeight: 700, color: "#059669",
+                  background: "#ecfdf5", padding: "4px 14px", borderRadius: 6, border: "1px solid #a7f3d0",
+                  letterSpacing: "1px",
+                }}>
+                  {voucherCodeMatch[1].trim()}
+                </span>
+                {shopifyOk && <span style={{ fontSize: 11, color: "#059669" }}>✅ Vytvorený v Shopify</span>}
+              </div>
+            )}
+            {shopifyError && !voucherCodeMatch && (
+              <div style={{ fontSize: 12, color: "#dc2626", marginTop: 4 }}>
+                ⚠️ {shopifyError[1].trim()}
+              </div>
+            )}
+          </div>
+        );
+      })()}
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 350px", gap: 24, alignItems: "start" }}>
         <div>
@@ -672,17 +745,27 @@ export default function AdminReturnDetail() {
                 {approveResolution === "voucher" && (
                   <div style={{ marginBottom: 10, padding: 10, background: "#fefce8", borderRadius: 8, border: "1px solid #fde047" }}>
                     <div style={{ fontSize: 12, color: "#854d0e", marginBottom: 8, fontWeight: 600 }}>
-                      Riešenie voucherom
+                      🎟️ Riešenie voucherom — automaticky sa vytvorí v Shopify
                     </div>
-                    <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+                    <div style={{ display: "flex", gap: 8, marginBottom: 8 }}>
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Hodnota voucheru ({ret.currency})</label>
-                        <input type="text" name="voucherAmount" placeholder="napr. 25.00" defaultValue="" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                        <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Typ</label>
+                        <select name="voucherType" defaultValue="fixed" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }}>
+                          <option value="fixed">Fixná suma ({ret.currency})</option>
+                          <option value="percentage">Percento (%)</option>
+                        </select>
                       </div>
                       <div style={{ flex: 1 }}>
-                        <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Číslo voucheru / kód</label>
-                        <input type="text" name="voucherCode" placeholder="napr. VCH-2026-001" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
+                        <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Hodnota</label>
+                        <input type="number" name="voucherAmount" placeholder="napr. 25" step="0.01" min="0" style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13 }} />
                       </div>
+                    </div>
+                    <div style={{ fontSize: 11, color: "#92400e", background: "#fef9c3", padding: "6px 10px", borderRadius: 6, marginBottom: 8 }}>
+                      ℹ️ Po schválení sa automaticky vytvorí jednorazový kupón v Shopify ({ret.storeName}) a kód sa zapíše nižšie.
+                    </div>
+                    <div>
+                      <label style={{ fontSize: 12, color: "#6b7280", display: "block", marginBottom: 4 }}>Kód voucheru (vyplní sa automaticky, alebo zadaj manuálne)</label>
+                      <input type="text" name="voucherCode" placeholder="automaticky sa vygeneruje..." style={{ width: "100%", padding: 8, borderRadius: 6, border: "1px solid #e5e7eb", fontSize: 13, background: "#fefce8" }} />
                     </div>
                   </div>
                 )}
