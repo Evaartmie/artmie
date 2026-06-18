@@ -5,21 +5,42 @@ import crypto from "crypto";
 // Manual OAuth install endpoint
 // Step 1: Visit /auth/install?shop=papilora-ba.myshopify.com → redirects to Shopify OAuth
 // Step 2: Shopify redirects back to /auth/install with code → exchanges for token
+const ARTMIE_STORES = [
+  "cz-artmie", "bg-artmie", "pl-artmie", "ba-artmie", "rs-artmie",
+  "mk-artmie", "hu-artmie", "ro-artmie", "20a254-6e", "de-artmie",
+  "si-artmie", "gr-artmie", "it-artmie",
+];
+
+function isArtmieStore(shop: string): boolean {
+  return ARTMIE_STORES.some(s => shop.startsWith(s));
+}
+
+function getCredentials(shop: string) {
+  if (isArtmieStore(shop)) {
+    return {
+      apiKey: process.env.SHOPIFY_API_KEY_ARTMIE || process.env.SHOPIFY_API_KEY!,
+      apiSecret: process.env.SHOPIFY_API_SECRET_ARTMIE || process.env.SHOPIFY_API_SECRET!,
+    };
+  }
+  return {
+    apiKey: process.env.SHOPIFY_API_KEY!,
+    apiSecret: process.env.SHOPIFY_API_SECRET!,
+  };
+}
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
   const shop = url.searchParams.get("shop");
   const code = url.searchParams.get("code");
 
-  const apiKey = process.env.SHOPIFY_API_KEY;
-  const apiSecret = process.env.SHOPIFY_API_SECRET;
   const scopes = process.env.SCOPES || "read_customers,read_orders,read_products,read_returns,write_orders,write_returns,write_price_rules,read_price_rules,write_discounts,read_discounts";
   const appUrl = process.env.SHOPIFY_APP_URL || "";
   const redirectUri = `${appUrl}/auth/install`;
 
   // Step 2: We have the code - exchange it for a token
   if (code && shop) {
+    const { apiKey, apiSecret } = getCredentials(shop);
     try {
-      // Verify HMAC (optional but good practice)
       const tokenResponse = await fetch(`https://${shop}/admin/oauth/access_token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -95,10 +116,8 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     );
   }
 
+  const { apiKey } = getCredentials(shop);
   const nonce = crypto.randomBytes(16).toString("hex");
-  const authUrl = `https://${shop}/admin/oauth/authorize?client_id=${apiKey}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${nonce}&grant_options[]=per-user`;
-
-  // Actually we want OFFLINE access (not per-user), so remove grant_options
   const offlineAuthUrl = `https://${shop}/admin/oauth/authorize?client_id=${apiKey}&scope=${scopes}&redirect_uri=${encodeURIComponent(redirectUri)}&state=${nonce}`;
 
   return redirect(offlineAuthUrl);
