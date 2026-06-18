@@ -981,21 +981,50 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
       const totalOrders = workingCount;
       const cleanNumber = orderNumber.replace(/^#/, '');
 
+      // Try 1: search by name without #
       const restUrl = `https://${shopDomain}/admin/api/2025-04/orders.json?name=${encodeURIComponent(cleanNumber)}&status=any&limit=1`;
-
       let response = await fetch(restUrl, {
         headers: { "X-Shopify-Access-Token": session.accessToken },
       });
-
       let data = await response.json();
 
-      // If not found, try with # prefix
+      // Try 2: search by name with # prefix
       if (!data.orders || data.orders.length === 0) {
         const restUrl2 = `https://${shopDomain}/admin/api/2025-04/orders.json?name=%23${encodeURIComponent(cleanNumber)}&status=any&limit=1`;
         response = await fetch(restUrl2, {
           headers: { "X-Shopify-Access-Token": session.accessToken },
         });
         data = await response.json();
+      }
+
+      // Try 3: GraphQL search (handles custom order number formats)
+      if (!data.orders || data.orders.length === 0) {
+        const gqlUrl = `https://${shopDomain}/admin/api/2025-04/graphql.json`;
+        const gqlQuery = `{
+          orders(first: 1, query: "name:${cleanNumber}") {
+            edges { node { legacyResourceId name } }
+          }
+        }`;
+        const gqlResp = await fetch(gqlUrl, {
+          method: "POST",
+          headers: {
+            "X-Shopify-Access-Token": session.accessToken,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ query: gqlQuery }),
+        });
+        const gqlData = await gqlResp.json();
+        const gqlOrderId = gqlData?.data?.orders?.edges?.[0]?.node?.legacyResourceId;
+        if (gqlOrderId) {
+          const restUrl3 = `https://${shopDomain}/admin/api/2025-04/orders/${gqlOrderId}.json`;
+          response = await fetch(restUrl3, {
+            headers: { "X-Shopify-Access-Token": session.accessToken },
+          });
+          const singleData = await response.json();
+          if (singleData.order) {
+            data = { orders: [singleData.order] };
+          }
+        }
       }
 
       let order = data.orders?.[0];
