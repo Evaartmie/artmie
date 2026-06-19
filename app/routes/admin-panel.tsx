@@ -9,7 +9,7 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const session = await adminSessionCookie.parse(cookieHeader);
   const isAuthenticated = session?.authenticated === true;
 
-  let counts = { pending: 0, claims: 0, returns: 0, exchanges: 0 };
+  let counts = { pending: 0, claims: 0, returns: 0, exchanges: 0, withdrawals: 0 };
 
   if (isAuthenticated) {
     try {
@@ -30,11 +30,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         let classified = false;
         for (const rawNote of allNotes) {
           const note = rawNote.toLowerCase();
+          if (note.includes("odstúpenie od zmluvy")) { counts.withdrawals++; classified = true; break; }
           if (note.startsWith("reklamácia") || note.includes("defective") || note.includes("damaged") || note.includes("wrong") || note.includes("missing") || note.includes("nekvalitný") || note.includes("poškodený")) { counts.claims++; classified = true; break; }
           if (note.startsWith("vrátenie") || note.includes("does not fit") || note.includes("changed mind") || note.includes("not as described") || note.includes("odstúpenie")) { counts.returns++; classified = true; break; }
           if (note.startsWith("výmena") || note.includes("exchange")) { counts.exchanges++; classified = true; break; }
         }
-        // If no type detected but return is active, count as return (default)
         if (!classified) { counts.returns++; }
       }
     } catch (e) { /* ignore if DB not ready */ }
@@ -108,6 +108,10 @@ export default function AdminPanelLayout() {
                 <Link to="/admin-panel/returns?type=exchange" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.exchanges > 0 ? "rgba(234,179,8,0.15)" : "transparent", textDecoration: "none", transition: "background 0.15s" }}>
                   <span style={{ fontSize: 13, color: counts.exchanges > 0 ? "#fde047" : "rgba(255,255,255,0.4)" }}>Výmeny</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: counts.exchanges > 0 ? "#fde047" : "rgba(255,255,255,0.3)" }}>{counts.exchanges}</span>
+                </Link>
+                <Link to="/admin-panel/returns?type=withdrawal" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.withdrawals > 0 ? "rgba(190,24,93,0.15)" : "transparent", textDecoration: "none", transition: "background 0.15s" }}>
+                  <span style={{ fontSize: 13, color: counts.withdrawals > 0 ? "#f9a8d4" : "rgba(255,255,255,0.4)" }}>Odstúpenia</span>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: counts.withdrawals > 0 ? "#f9a8d4" : "rgba(255,255,255,0.3)" }}>{counts.withdrawals}</span>
                 </Link>
               </div>
             </div>

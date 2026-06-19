@@ -74,23 +74,29 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       claim: ["Reklamácia"],
       return: ["Vrátenie"],
       exchange: ["Výmena"],
+      withdrawal: [],
     };
     // Also match English/legacy keywords
     const typeKeywords: Record<string, string[]> = {
       claim: ["defective", "damaged", "wrong", "missing", "low quality", "nekvalitný", "poškodený", "nesprávny", "chýbajúci"],
       return: ["does not fit", "changed mind", "not as described", "odstúpenie"],
       exchange: ["exchange", "výmena"],
+      withdrawal: ["odstúpenie od zmluvy"],
     };
-    const prefixes = typeReasonPrefixes[typeFilter] || [];
-    const keywords = typeKeywords[typeFilter] || [];
-    where.lineItems = {
-      some: {
-        OR: [
-          ...prefixes.map((p: string) => ({ customerNote: { startsWith: p } })),
-          ...keywords.map((k: string) => ({ customerNote: { contains: k } })),
-        ],
-      },
-    };
+    if (typeFilter === "withdrawal") {
+      where.customerNotes = { contains: "odstúpenie od zmluvy" };
+    } else {
+      const prefixes = typeReasonPrefixes[typeFilter] || [];
+      const keywords = typeKeywords[typeFilter] || [];
+      where.lineItems = {
+        some: {
+          OR: [
+            ...prefixes.map((p: string) => ({ customerNote: { startsWith: p } })),
+            ...keywords.map((k: string) => ({ customerNote: { contains: k } })),
+          ],
+        },
+      };
+    }
   }
 
   // Reason filter - filter returns that have lineItems with matching customerNote prefix
@@ -182,6 +188,10 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
       reasons: [...new Set(r.lineItems.map(li => li.reason?.label || li.customerNote?.split("\n")[0] || "").filter(Boolean))].join(", "),
       returnType: (() => {
         const types = new Set<string>();
+        if ((r.customerNotes || "").toLowerCase().includes("odstúpenie od zmluvy")) {
+          types.add("withdrawal");
+          return Array.from(types);
+        }
         for (const li of r.lineItems) {
           const note = (li.customerNote?.split("\n")[0] || "").toLowerCase();
           if (!note) continue;
@@ -461,6 +471,7 @@ export default function AdminReturnsList() {
                       <div style={{ fontSize: 13 }}>{ret.productNames.length > 50 ? ret.productNames.substring(0, 47) + "..." : ret.productNames}</div>
                       <div style={{ fontSize: 12, color: "#dc2626" }}>{ret.reasons || "—"}</div>
                       <div style={{ display: "flex", gap: 4, marginTop: 3 }}>
+                        {ret.returnType?.includes("withdrawal") && <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: "#fdf2f8", color: "#be185d", border: "1px solid #fbcfe8" }}>Odstúpenie</span>}
                         {ret.returnType?.includes("claim") && <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}>Reklamácia</span>}
                         {ret.returnType?.includes("return") && <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: "#eff6ff", color: "#2563eb", border: "1px solid #bfdbfe" }}>Vrátenie</span>}
                         {ret.returnType?.includes("exchange") && <span style={{ padding: "1px 6px", borderRadius: 4, fontSize: 10, fontWeight: 600, background: "#fefce8", color: "#ca8a04", border: "1px solid #fde68a" }}>Výmena</span>}
