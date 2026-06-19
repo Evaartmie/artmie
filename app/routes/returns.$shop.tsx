@@ -902,10 +902,11 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
   const lang = getLang(slug);
 
   if (!shopDomain) {
-    return json({ error: "Store not found", shopName: "", shopDomain: "", reasons: [], brandColor: "#333", t, lang });
+    return json({ error: "Store not found", shopName: "", shopDomain: "", reasons: [], brandColor: "#333", brandGradient: "#333", t, lang });
   }
 
-  const brandColor = slug.startsWith("papilora") ? "#6B2D8B" : "#D4A853";
+  const brandColor = slug.startsWith("papilora") ? "#6B2D8B" : "#E8453C";
+  const brandGradient = slug.startsWith("papilora") ? "#6B2D8B" : "linear-gradient(135deg, #E8453C, #F86543, #F7A828)";
 
   // Load return reasons for this store
   const reasons = await prisma.returnReason.findMany({
@@ -913,7 +914,7 @@ export const loader = async ({ params }: LoaderFunctionArgs) => {
     orderBy: { sortOrder: "asc" },
   });
 
-  return json({ error: null, shopName, shopDomain, reasons, brandColor, t, lang });
+  return json({ error: null, shopName, shopDomain, reasons, brandColor, brandGradient, t, lang });
 };
 
 export const action = async ({ request, params }: ActionFunctionArgs) => {
@@ -1268,7 +1269,7 @@ export const action = async ({ request, params }: ActionFunctionArgs) => {
 };
 
 export default function ReturnsPortal() {
-  const { error: loaderError, shopName, shopDomain, reasons, brandColor, t, lang } = useLoaderData<typeof loader>();
+  const { error: loaderError, shopName, shopDomain, reasons, brandColor, brandGradient, t, lang } = useLoaderData<typeof loader>();
   const actionData = useActionData<typeof action>();
   const navigation = useNavigation();
   const isSubmitting = navigation.state === "submitting";
@@ -1310,7 +1311,7 @@ export default function ReturnsPortal() {
         <style dangerouslySetInnerHTML={{ __html: `
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { font-family: system-ui, -apple-system, sans-serif; background: #f5f5f7; color: #333; min-height: 100vh; }
-          .header { background: ${brandColor}; color: white; padding: 20px 0; text-align: center; }
+          .header { background: ${brandGradient}; color: white; padding: 20px 0; text-align: center; }
           .header h1 { font-size: 24px; font-weight: 600; }
           .header p { opacity: 0.9; margin-top: 4px; }
           .container { max-width: 700px; margin: 30px auto; padding: 0 20px; }
@@ -1326,7 +1327,7 @@ export default function ReturnsPortal() {
           }
           .btn { display: inline-block; padding: 14px 28px; border-radius: 8px; font-size: 16px;
             font-weight: 600; border: none; cursor: pointer; transition: opacity 0.2s; }
-          .btn-primary { background: ${brandColor}; color: white; width: 100%; }
+          .btn-primary { background: ${brandGradient}; color: white; width: 100%; }
           .btn-primary:hover { opacity: 0.9; }
           .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
           .btn-secondary { background: #eee; color: #333; }
