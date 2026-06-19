@@ -61,6 +61,7 @@ export default function AdminPanelLayout() {
     { label: "Nové Tickety", path: "/admin-panel/returns", icon: "\u{1F4E6}" },
     { label: "Reporty", path: "/admin-panel/reports", icon: "\u{1F4C4}" },
     { label: "Obchody", path: "/admin-panel/stores", icon: "\u{1F3EA}" },
+    { label: "Embed kódy", path: "/admin-panel/embed", icon: "\u{1F517}" },
   ];
 
   return (
