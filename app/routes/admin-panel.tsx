@@ -1,13 +1,16 @@
 import type { LoaderFunctionArgs, LinksFunction } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Outlet, Link, useLoaderData, useLocation } from "@remix-run/react";
+import { Outlet, Link, useLoaderData, useLocation, Form } from "@remix-run/react";
 import { adminSessionCookie } from "../utils/admin-auth.server";
 import { prisma } from "../db.server";
+import { getAdminLang, getAdminT } from "../utils/admin-i18n";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const cookieHeader = request.headers.get("Cookie");
   const session = await adminSessionCookie.parse(cookieHeader);
   const isAuthenticated = session?.authenticated === true;
+  const lang = await getAdminLang(request);
+  const t = getAdminT(lang);
 
   let counts = { pending: 0, claims: 0, returns: 0, exchanges: 0, withdrawals: 0 };
 
@@ -40,11 +43,11 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     } catch (e) { /* ignore if DB not ready */ }
   }
 
-  return json({ isAuthenticated, counts });
+  return json({ isAuthenticated, counts, lang, t });
 };
 
 export default function AdminPanelLayout() {
-  const { isAuthenticated, counts } = useLoaderData<typeof loader>();
+  const { isAuthenticated, counts, lang, t } = useLoaderData<typeof loader>();
   const location = useLocation();
 
   if (!isAuthenticated) {
@@ -57,11 +60,11 @@ export default function AdminPanelLayout() {
   }
 
   const navItems = [
-    { label: "Dashboard", path: "/admin-panel/dashboard", icon: "\u{1F4CA}" },
-    { label: "Nové Tickety", path: "/admin-panel/returns", icon: "\u{1F4E6}" },
-    { label: "Reporty", path: "/admin-panel/reports", icon: "\u{1F4C4}" },
-    { label: "Obchody", path: "/admin-panel/stores", icon: "\u{1F3EA}" },
-    { label: "Embed kódy", path: "/admin-panel/embed", icon: "\u{1F517}" },
+    { label: t.navDashboard, path: "/admin-panel/dashboard", icon: "\u{1F4CA}" },
+    { label: t.navTickets, path: "/admin-panel/returns", icon: "\u{1F4E6}" },
+    { label: t.navReports, path: "/admin-panel/reports", icon: "\u{1F4C4}" },
+    { label: t.navStores, path: "/admin-panel/stores", icon: "\u{1F3EA}" },
+    { label: t.navEmbed, path: "/admin-panel/embed", icon: "\u{1F517}" },
   ];
 
   return (
@@ -71,8 +74,8 @@ export default function AdminPanelLayout() {
         {/* Sidebar */}
         <aside className="admin-sidebar">
           <div className="sidebar-header">
-            <h1>Returns Manager</h1>
-            <p>Central Admin Panel</p>
+            <h1>{t.appTitle}</h1>
+            <p>{t.appSubtitle}</p>
           </div>
           <nav className="sidebar-nav">
             {navItems.map((item) => (
@@ -94,32 +97,54 @@ export default function AdminPanelLayout() {
             {/* Typ vrátení s počtami */}
             <div style={{ marginTop: 16, paddingTop: 12, borderTop: "1px solid rgba(255,255,255,0.1)" }}>
               <div style={{ padding: "4px 16px", fontSize: 11, color: "rgba(255,255,255,0.4)", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4 }}>
-                Na riešenie
+                {t.sidebarPending}
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 2, padding: "0 10px" }}>
                 <Link to="/admin-panel/returns?type=claim" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.claims > 0 ? "rgba(239,68,68,0.15)" : "transparent", textDecoration: "none", transition: "background 0.15s" }}>
-                  <span style={{ fontSize: 13, color: counts.claims > 0 ? "#fca5a5" : "rgba(255,255,255,0.4)" }}>Reklamácie</span>
+                  <span style={{ fontSize: 13, color: counts.claims > 0 ? "#fca5a5" : "rgba(255,255,255,0.4)" }}>{t.typeClaims}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: counts.claims > 0 ? "#fca5a5" : "rgba(255,255,255,0.3)" }}>{counts.claims}</span>
                 </Link>
                 <Link to="/admin-panel/returns?type=return" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.returns > 0 ? "rgba(59,130,246,0.15)" : "transparent", textDecoration: "none", transition: "background 0.15s" }}>
-                  <span style={{ fontSize: 13, color: counts.returns > 0 ? "#93c5fd" : "rgba(255,255,255,0.4)" }}>Vrátenia</span>
+                  <span style={{ fontSize: 13, color: counts.returns > 0 ? "#93c5fd" : "rgba(255,255,255,0.4)" }}>{t.typeReturns}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: counts.returns > 0 ? "#93c5fd" : "rgba(255,255,255,0.3)" }}>{counts.returns}</span>
                 </Link>
                 <Link to="/admin-panel/returns?type=exchange" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.exchanges > 0 ? "rgba(234,179,8,0.15)" : "transparent", textDecoration: "none", transition: "background 0.15s" }}>
-                  <span style={{ fontSize: 13, color: counts.exchanges > 0 ? "#fde047" : "rgba(255,255,255,0.4)" }}>Výmeny</span>
+                  <span style={{ fontSize: 13, color: counts.exchanges > 0 ? "#fde047" : "rgba(255,255,255,0.4)" }}>{t.typeExchanges}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: counts.exchanges > 0 ? "#fde047" : "rgba(255,255,255,0.3)" }}>{counts.exchanges}</span>
                 </Link>
                 <Link to="/admin-panel/returns?type=withdrawal" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px", borderRadius: 6, background: counts.withdrawals > 0 ? "rgba(190,24,93,0.15)" : "transparent", textDecoration: "none", transition: "background 0.15s" }}>
-                  <span style={{ fontSize: 13, color: counts.withdrawals > 0 ? "#f9a8d4" : "rgba(255,255,255,0.4)" }}>Odstúpenia</span>
+                  <span style={{ fontSize: 13, color: counts.withdrawals > 0 ? "#f9a8d4" : "rgba(255,255,255,0.4)" }}>{t.typeWithdrawals}</span>
                   <span style={{ fontSize: 13, fontWeight: 700, color: counts.withdrawals > 0 ? "#f9a8d4" : "rgba(255,255,255,0.3)" }}>{counts.withdrawals}</span>
                 </Link>
               </div>
             </div>
           </nav>
           <div className="sidebar-footer">
+            <div style={{ display: "flex", gap: 6, marginBottom: 10 }}>
+              <Form method="post" action="/admin-panel/set-lang" style={{ flex: 1 }}>
+                <input type="hidden" name="lang" value="sk" />
+                <input type="hidden" name="redirectTo" value={location.pathname + location.search} />
+                <button type="submit" style={{
+                  width: "100%", padding: "6px 0", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6,
+                  background: lang === "sk" ? "rgba(255,255,255,0.2)" : "transparent",
+                  color: lang === "sk" ? "white" : "rgba(255,255,255,0.5)",
+                  cursor: "pointer", fontSize: 12, fontWeight: 600,
+                }}>SK</button>
+              </Form>
+              <Form method="post" action="/admin-panel/set-lang" style={{ flex: 1 }}>
+                <input type="hidden" name="lang" value="en" />
+                <input type="hidden" name="redirectTo" value={location.pathname + location.search} />
+                <button type="submit" style={{
+                  width: "100%", padding: "6px 0", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 6,
+                  background: lang === "en" ? "rgba(255,255,255,0.2)" : "transparent",
+                  color: lang === "en" ? "white" : "rgba(255,255,255,0.5)",
+                  cursor: "pointer", fontSize: 12, fontWeight: 600,
+                }}>EN</button>
+              </Form>
+            </div>
             <form method="post" action="/admin-panel/logout">
               <button type="submit" className="logout-btn">
-                Odhlasit sa
+                {t.logout}
               </button>
             </form>
           </div>
